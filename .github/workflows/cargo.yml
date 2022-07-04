@@ -1,9 +1,12 @@
 on:
   push:
-    tags:
-      - "*"
+    branches:
+    - main
+  pull_request:
+    branches:
+    - main
 
-name: CI # Continuous Integration
+name: CI
 
 jobs:
   lint:
