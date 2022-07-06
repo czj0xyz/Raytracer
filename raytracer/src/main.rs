@@ -6,7 +6,7 @@ fn main(){
     println!("{} {}",WIDTH,HEIGHT);
     println!("255");
     for j in (0..HEIGHT).rev() {
-        eprintln!("Scanlines remaining:{}",j);
+        // eprintln!("Scanlines remaining:{}",j);
         for i in 0..WIDTH {
             let r = (i as f64) / ((HEIGHT-1) as f64);
             let g = (j as f64) / ((WIDTH-1) as f64);
@@ -19,5 +19,5 @@ fn main(){
             println!("{} {} {}",ir,ig,ib);
         }
     }
-    eprintln!("Done!");
+    // eprintln!("Done!");
 }
