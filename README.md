@@ -1,3 +1,7 @@
+当前进度：
+
+![img](file:///C:\Users\USER\Documents\Tencent Files\2504177864\Image\C2C\OQD6R]W1Z2M@SXQIO3ZRKNT.png)
+
 ![banner](https://user-images.githubusercontent.com/4198311/89027545-461dd180-d35d-11ea-9972-7bf1b07f942d.png)
 
 # PPCA Raytracer 2022
