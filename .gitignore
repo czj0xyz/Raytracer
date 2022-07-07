@@ -1,5 +1,3 @@
 /target
-/output/*
 /.vscode
 !.gitkeep
-!.README

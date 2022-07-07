@@ -1,9 +1,10 @@
 mod vec3;
 mod ray;
 
-use crate::vec3::{Vec3,Color,Point3,dot,unit_vector};
+use crate::vec3::{Vec3,Color,Point3,dot,cross,unit_vector};
 use crate::ray::{Ray};
 
+// use ray::Ray;
 fn write_color(pixel_color : Color){
     println!("{} {} {}",(255.999*pixel_color.x()) as usize,
                         (255.999*pixel_color.y()) as usize,
@@ -14,21 +15,18 @@ const ASPECT_RATIO : f64 = 16.0/9.0;
 const WIDTH: usize = 400;
 const HEIGHT: usize = (WIDTH as f64 / ASPECT_RATIO) as usize;
 
-fn hit_sphere(center: Point3, radius: f64, r: &Ray) -> f64{
+fn hit_sphere(center: Point3, radius: f64, r: Ray) -> bool{
     let oc = r.get_start() - center;
-    let a = r.get_dir().length_squared();
-    let half_b = dot(oc , r.get_dir());
-    let c = oc.length_squared() - radius*radius;
-    let discriminant = half_b*half_b - a*c;
-    if discriminant < 0.0 {-1.0}else{(-half_b-discriminant.sqrt())/a}
-
+    let a = dot(r.get_dir(),r.get_dir());
+    let b = 2.0 * dot(oc , r.get_dir());
+    let c = dot(oc,oc) - radius*radius;
+    let discriminant = b*b - 4.0*a*c;
+    discriminant > 0.0
 }
 
-fn ray_color(r : &Ray) -> Color{
-    let t = hit_sphere(Point3{e:[0.0,0.0,-1.0]},0.5,r);
-    if t > 0.0 {
-        let n = unit_vector(r.at(t)- Vec3{e:[0.0,0.0,-1.0]});
-        Color{e:[n.x()+1.0,n.y()+1.0,n.z()+1.0]} * 0.5
+fn ray_color(r : Ray) -> Color{
+    if hit_sphere(Point3{e:[0.0,0.0,-1.0]},0.5,r) {
+        Color{e:[1.0,0.0,0.0]} 
     }else{
         let unit_dir = unit_vector(r.get_dir());
         let t = 0.5*(unit_dir.y() + 1.0);
@@ -36,10 +34,7 @@ fn ray_color(r : &Ray) -> Color{
     }
 }
 
-
-
 fn main(){
-    
     // //Camera
     let viewport_height = 2.0;
     let viewport_width = ASPECT_RATIO * viewport_height;
@@ -63,7 +58,7 @@ fn main(){
             let u = (i as f64) / ((WIDTH-1) as f64);
             let v = (j as f64) / ((HEIGHT-1) as f64);
             let r = Ray{ st: origin , dir: lower_left_corner + horizontal*u + vertical*v - origin};
-            let color = ray_color(&r);
+            let color = ray_color(r);
             write_color(color);
         }
 

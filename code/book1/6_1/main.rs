@@ -1,9 +1,10 @@
 mod vec3;
 mod ray;
 
-use crate::vec3::{Vec3,Color,Point3,dot,unit_vector};
+use crate::vec3::{Vec3,Color,Point3,dot,cross,unit_vector};
 use crate::ray::{Ray};
 
+// use ray::Ray;
 fn write_color(pixel_color : Color){
     println!("{} {} {}",(255.999*pixel_color.x()) as usize,
                         (255.999*pixel_color.y()) as usize,
@@ -16,11 +17,11 @@ const HEIGHT: usize = (WIDTH as f64 / ASPECT_RATIO) as usize;
 
 fn hit_sphere(center: Point3, radius: f64, r: &Ray) -> f64{
     let oc = r.get_start() - center;
-    let a = r.get_dir().length_squared();
-    let half_b = dot(oc , r.get_dir());
-    let c = oc.length_squared() - radius*radius;
-    let discriminant = half_b*half_b - a*c;
-    if discriminant < 0.0 {-1.0}else{(-half_b-discriminant.sqrt())/a}
+    let a = dot(r.get_dir(),r.get_dir());
+    let b = 2.0 * dot(oc , r.get_dir());
+    let c = dot(oc,oc) - radius*radius;
+    let discriminant = b*b - 4.0*a*c;
+    if discriminant < 0.0 {-1.0}else{(-b-discriminant.sqrt())/(2.0*a)}
 
 }
 
@@ -35,8 +36,6 @@ fn ray_color(r : &Ray) -> Color{
         Color{e:[1.0;3]} * (1.0-t) + Color{e:[0.5,0.7,1.0]} *t
     }
 }
-
-
 
 fn main(){
     
