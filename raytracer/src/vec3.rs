@@ -49,7 +49,11 @@ impl Mul<f64> for Vec3 {
 impl MulAssign<f64> for Vec3 {
     fn mul_assign(&mut self, other: f64) {
         *self = Vec3 {
-            e: [(*self).e[0] * other, (*self).e[1] * other, (*self).e[2] * other],
+            e: [
+                (*self).e[0] * other,
+                (*self).e[1] * other,
+                (*self).e[2] * other,
+            ],
         }
     }
 }
@@ -90,14 +94,19 @@ impl Div<f64> for Vec3 {
 impl DivAssign<f64> for Vec3 {
     fn div_assign(&mut self, other: f64) {
         *self = Vec3 {
-            e: [(*self).e[0] / other, (*self).e[1] / other, (*self).e[2] / other],
+            e: [
+                (*self).e[0] / other,
+                (*self).e[1] / other,
+                (*self).e[2] / other,
+            ],
         }
     }
 }
 
 impl Vec3 {
     pub fn length(&self) -> f64 {
-        ((*self).e[0] * (*self).e[0] + (*self).e[1] * (*self).e[1] + (*self).e[2] * (*self).e[2]).sqrt()
+        ((*self).e[0] * (*self).e[0] + (*self).e[1] * (*self).e[1] + (*self).e[2] * (*self).e[2])
+            .sqrt()
     }
 
     pub fn length_squared(&self) -> f64 {

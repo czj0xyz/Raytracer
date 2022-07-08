@@ -54,6 +54,7 @@ fn main() {
     //Image
     let path = "output/output.jpg";
     let mut img: RgbImage = ImageBuffer::new(WIDTH as u32, HEIGHT as u32);
+
     //World
     let mut world: HittableList = Default::default();
     world.add(Box::new(Sphere {
@@ -89,9 +90,6 @@ fn main() {
         };
 
     //Render
-    println!("P3");
-    println!("{} {}", WIDTH, HEIGHT);
-    println!("255");
 
     for j in (0..HEIGHT).rev() {
         eprintln!("Scanlines remaining: {}", j);
