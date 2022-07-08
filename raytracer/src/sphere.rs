@@ -15,7 +15,7 @@ impl Hittable for Sphere {
         let half_b = dot(oc, r.get_dir());
         let c = oc.length_squared() - (*self).radius * (*self).radius;
         let mut ret = true;
-        let discriminant = half_b * half_b - a * c;
+        let discriminant = half_b.powi(2) - a * c;
         if discriminant < 0.0 {
             ret = false;
         } else {
