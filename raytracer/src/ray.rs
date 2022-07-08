@@ -8,12 +8,12 @@ pub struct Ray {
 
 impl Ray {
     pub fn get_start(&self) -> Point3 {
-        self.st
+        (*self).st
     }
     pub fn get_dir(&self) -> Vec3 {
-        self.dir
+        (*self).dir
     }
     pub fn at(&self, t: f64) -> Point3 {
-        self.st + self.dir * t
+        (*self).st + (*self).dir * t
     }
 }

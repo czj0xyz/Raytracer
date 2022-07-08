@@ -12,7 +12,7 @@ impl HittableList {
     // }
 
     pub fn add(&mut self, obj: Box<dyn Hittable>) {
-        self.objects.push(obj);
+        (*self).objects.push(obj);
     }
 }
 

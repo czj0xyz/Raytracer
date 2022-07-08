@@ -41,7 +41,7 @@ fn write_color(pixel_color: Color, img: &mut RgbImage, x: usize, y: usize) {
 
 fn ray_color(r: Ray, world: &impl Hittable) -> Color {
     let mut rec: HitRecord = Default::default();
-    if world.hit(r, 0.0, INFINITY, &mut rec) {
+    if (*world).hit(r, 0.0, INFINITY, &mut rec) {
         (rec.normal + Color { e: [1.0; 3] }) * 0.5
     } else {
         let unit_dir = unit_vector(r.get_dir());
