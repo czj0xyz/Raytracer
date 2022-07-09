@@ -2,40 +2,67 @@ use std::f64::INFINITY;
 // use std::f64::consts::PI;
 use console::style;
 use image::{ImageBuffer, RgbImage};
+use rand::prelude::*;
 use std::{fs::File, process::exit};
 
+mod camera;
 mod hittable;
 mod hittable_list;
 mod ray;
 mod sphere;
 mod vec3;
 
+use crate::camera::Camera;
 use crate::hittable::{HitRecord, Hittable};
 use crate::hittable_list::HittableList;
 use crate::ray::Ray;
 use crate::sphere::Sphere;
-use crate::vec3::{unit_vector, Color, Point3, Vec3};
+use crate::vec3::{unit_vector, Color, Point3};
 
 // fn degrees_to_radians(degrees: f64) -> f64{
 //     degrees * PI / 180.0
 // }
 
 const ASPECT_RATIO: f64 = 16.0 / 9.0;
-const WIDTH: usize = 400;
+const WIDTH: usize = 2000;
 const HEIGHT: usize = (WIDTH as f64 / ASPECT_RATIO) as usize;
+const SAMPLES_PER_PIXEL: usize = 100;
 const QUALITY: u8 = 100;
 
-fn write_color(pixel_color: Color, img: &mut RgbImage, x: usize, y: usize) {
+fn random_double() -> f64 {
+    let mut rng = rand::thread_rng();
+
+    rng.gen()
+}
+
+fn clamp(x: f64, min: f64, max: f64) -> f64 {
+    if x < min {
+        min
+    } else if x > max {
+        max
+    } else {
+        x
+    }
+}
+
+fn write_color(
+    pixel_color: Color,
+    samples_per_pixel: usize,
+    img: &mut RgbImage,
+    x: usize,
+    y: usize,
+) {
     let pixel = (*img).get_pixel_mut(x as u32, (HEIGHT - y - 1) as u32);
+    let scale = 1.0 / samples_per_pixel as f64;
+    let r = pixel_color.x() * scale;
+    let g = pixel_color.y() * scale;
+    let b = pixel_color.z() * scale;
     let res: [u8; 3] = [
-        (255.999 * pixel_color.x()) as u8,
-        (255.999 * pixel_color.y()) as u8,
-        (255.999 * pixel_color.z()) as u8,
+        (256.0 * clamp(r, 0.0, 0.999)) as u8,
+        (256.0 * clamp(g, 0.0, 0.999)) as u8,
+        (256.0 * clamp(b, 0.0, 0.999)) as u8,
     ];
     *pixel = image::Rgb(res);
-    // println!("{} {} {}",(255.999*pixel_color.x()) as usize,
-    //                     (255.999*pixel_color.y()) as usize,
-    //                     (255.999*pixel_color.z()) as usize);
 }
 //Image
 
@@ -71,23 +98,7 @@ fn main() {
     }));
 
     //Camera
-    let viewport_height = 2.0;
-    let viewport_width = ASPECT_RATIO * viewport_height;
-    let focal_length = 1.0;
-
-    let origin = Point3 { e: [0.0; 3] };
-    let horizontal = Vec3 {
-        e: [viewport_width, 0.0, 0.0],
-    };
-    let vertical = Vec3 {
-        e: [0.0, viewport_height, 0.0],
-    };
-    let lower_left_corner = origin
-        - horizontal / 2.0
-        - vertical / 2.0
-        - Vec3 {
-            e: [0.0, 0.0, focal_length],
-        };
+    let cam: Camera = Default::default();
 
     //Render
 
@@ -95,14 +106,14 @@ fn main() {
         eprintln!("Scanlines remaining: {}", j);
 
         for i in 0..WIDTH {
-            let u = (i as f64) / ((WIDTH - 1) as f64);
-            let v = (j as f64) / ((HEIGHT - 1) as f64);
-            let r = Ray {
-                st: origin,
-                dir: lower_left_corner + horizontal * u + vertical * v - origin,
-            };
-            let pixdel_color = ray_color(r, &world);
-            write_color(pixdel_color, &mut img, i, j);
+            let mut pixel_color: Color = Color { e: [0.0; 3] };
+            for _ in 0..SAMPLES_PER_PIXEL {
+                let u = (i as f64 + random_double()) / ((WIDTH - 1) as f64);
+                let v = (j as f64 + random_double()) / ((HEIGHT - 1) as f64);
+                let r: Ray = cam.get_ray(u, v);
+                pixel_color = pixel_color + ray_color(r, &world);
+            }
+            write_color(pixel_color, SAMPLES_PER_PIXEL, &mut img, i, j);
         }
     }
     eprintln!("Done !");

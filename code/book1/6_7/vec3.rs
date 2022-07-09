@@ -22,9 +22,9 @@ impl AddAssign for Vec3 {
     fn add_assign(&mut self, other: Vec3) {
         *self = Vec3 {
             e: [
-                self.e[0] + other.e[0],
-                self.e[1] + other.e[1],
-                self.e[2] + other.e[2],
+                (*self).e[0] + other.e[0],
+                (*self).e[1] + other.e[1],
+                (*self).e[2] + other.e[2],
             ],
         }
     }
@@ -49,7 +49,11 @@ impl Mul<f64> for Vec3 {
 impl MulAssign<f64> for Vec3 {
     fn mul_assign(&mut self, other: f64) {
         *self = Vec3 {
-            e: [self.e[0] * other, self.e[1] * other, self.e[2] * other],
+            e: [
+                (*self).e[0] * other,
+                (*self).e[1] * other,
+                (*self).e[2] * other,
+            ],
         }
     }
 }
@@ -72,9 +76,9 @@ impl SubAssign for Vec3 {
     fn sub_assign(&mut self, other: Vec3) {
         *self = Vec3 {
             e: [
-                self.e[0] - other.e[0],
-                self.e[1] - other.e[1],
-                self.e[2] - other.e[2],
+                (*self).e[0] - other.e[0],
+                (*self).e[1] - other.e[1],
+                (*self).e[2] - other.e[2],
             ],
         }
     }
@@ -90,30 +94,35 @@ impl Div<f64> for Vec3 {
 impl DivAssign<f64> for Vec3 {
     fn div_assign(&mut self, other: f64) {
         *self = Vec3 {
-            e: [self.e[0] / other, self.e[1] / other, self.e[2] / other],
+            e: [
+                (*self).e[0] / other,
+                (*self).e[1] / other,
+                (*self).e[2] / other,
+            ],
         }
     }
 }
 
 impl Vec3 {
     pub fn length(&self) -> f64 {
-        (self.e[0] * self.e[0] + self.e[1] * self.e[1] + self.e[2] * self.e[2]).sqrt()
+        ((*self).e[0] * (*self).e[0] + (*self).e[1] * (*self).e[1] + (*self).e[2] * (*self).e[2])
+            .sqrt()
     }
 
     pub fn length_squared(&self) -> f64 {
-        self.e[0] * self.e[0] + self.e[1] * self.e[1] + self.e[2] * self.e[2]
+        (*self).e[0] * (*self).e[0] + (*self).e[1] * (*self).e[1] + (*self).e[2] * (*self).e[2]
     }
 
     pub fn x(&self) -> f64 {
-        self.e[0]
+        (*self).e[0]
     }
 
     pub fn y(&self) -> f64 {
-        self.e[1]
+        (*self).e[1]
     }
 
     pub fn z(&self) -> f64 {
-        self.e[2]
+        (*self).e[2]
     }
 }
 

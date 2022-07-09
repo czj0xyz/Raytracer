@@ -41,7 +41,7 @@ fn write_color(pixel_color: Color, img: &mut RgbImage, x: usize, y: usize) {
 
 fn ray_color(r: Ray, world: &impl Hittable) -> Color {
     let mut rec: HitRecord = Default::default();
-    if world.hit(r, 0.0, INFINITY, &mut rec) {
+    if (*world).hit(r, 0.0, INFINITY, &mut rec) {
         (rec.normal + Color { e: [1.0; 3] }) * 0.5
     } else {
         let unit_dir = unit_vector(r.get_dir());
@@ -54,6 +54,7 @@ fn main() {
     //Image
     let path = "output/output.jpg";
     let mut img: RgbImage = ImageBuffer::new(WIDTH as u32, HEIGHT as u32);
+
     //World
     let mut world: HittableList = Default::default();
     world.add(Box::new(Sphere {
@@ -89,9 +90,6 @@ fn main() {
         };
 
     //Render
-    println!("P3");
-    println!("{} {}", WIDTH, HEIGHT);
-    println!("255");
 
     for j in (0..HEIGHT).rev() {
         eprintln!("Scanlines remaining: {}", j);
