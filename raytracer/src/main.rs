@@ -27,7 +27,7 @@ const WIDTH: usize = 400;
 const HEIGHT: usize = (WIDTH as f64 / ASPECT_RATIO) as usize;
 const SAMPLES_PER_PIXEL: usize = 100;
 const QUALITY: u8 = 100;
-const MAXDEPTH: isize = 50  ;
+const MAXDEPTH: isize = 50;
 
 fn clamp(value: f64, min: f64, max: f64) -> f64 {
     if value < min {
