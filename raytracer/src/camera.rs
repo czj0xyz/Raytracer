@@ -16,25 +16,25 @@ impl Default for Camera {
         let viewport_width = aspect_ratio * viewport_height;
         let focal_length = 1.0;
 
-        let origin = Point3 { e: [0.0; 3] };
-        let horizontal = Vec3 {
+        let origin_ = Point3 { e: [0.0; 3] };
+        let horizontal_ = Vec3 {
             e: [viewport_width, 0.0, 0.0],
         };
-        let vertical = Vec3 {
+        let vertical_ = Vec3 {
             e: [0.0, viewport_height, 0.0],
         };
-        let lower_left_corner = origin
-            - horizontal / 2.0
-            - vertical / 2.0
+        let lower_left_corner_ = origin_
+            - horizontal_ / 2.0
+            - vertical_ / 2.0
             - Vec3 {
                 e: [0.0, 0.0, focal_length],
             };
 
         Camera {
-            origin: origin,
-            lower_left_corner: lower_left_corner,
-            horizontal: horizontal,
-            vertical: vertical,
+            origin: origin_,
+            lower_left_corner: lower_left_corner_,
+            horizontal: horizontal_,
+            vertical: vertical_,
         }
     }
 }

@@ -24,7 +24,7 @@ use crate::vec3::{unit_vector, Color, Point3};
 // }
 
 const ASPECT_RATIO: f64 = 16.0 / 9.0;
-const WIDTH: usize = 2000;
+const WIDTH: usize = 400;
 const HEIGHT: usize = (WIDTH as f64 / ASPECT_RATIO) as usize;
 const SAMPLES_PER_PIXEL: usize = 100;
 const QUALITY: u8 = 100;
