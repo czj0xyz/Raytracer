@@ -65,7 +65,7 @@ fn ray_color(r: Ray, world: &impl Hittable, depth: isize) -> Color {
         Color { e: [0.0; 3] }
     } else {
         let mut rec: HitRecord = Default::default();
-        if (*world).hit(r, 0.0, INFINITY, &mut rec) {
+        if (*world).hit(r, 0.000, INFINITY, &mut rec) {
             let target: Point3 = rec.p + rec.normal + random_in_unit_sphere();
             ray_color(
                 Ray {
