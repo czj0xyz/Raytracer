@@ -111,7 +111,7 @@ fn main() {
                 let u = (i as f64 + random_double()) / ((WIDTH - 1) as f64);
                 let v = (j as f64 + random_double()) / ((HEIGHT - 1) as f64);
                 let r: Ray = cam.get_ray(u, v);
-                pixel_color = pixel_color + ray_color(r, &world);
+                pixel_color += ray_color(r, &world);
             }
             write_color(pixel_color, SAMPLES_PER_PIXEL, &mut img, i, j);
         }
