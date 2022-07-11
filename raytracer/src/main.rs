@@ -68,7 +68,7 @@ fn ray_color(r: Ray, world: &impl Hittable, depth: isize) -> Color {
             let mut attenuation: Color = Default::default();
             match rec.clone().mat_ptr {
                 Some(x) => {
-                    if x.scatter(r, rec.clone(), &mut attenuation, &mut scattered) {
+                    if x.scatter(r, rec, &mut attenuation, &mut scattered) {
                         attenuation.mul(ray_color(scattered, world, depth - 1))
                     } else {
                         Color { e: [0.0; 3] }
