@@ -8,7 +8,6 @@ mod camera;
 mod hittable;
 mod hittable_list;
 mod material;
-mod moving_sphere;
 mod ray;
 mod sphere;
 mod vec3;
@@ -18,15 +17,14 @@ use crate::hittable::{HitRecord, Hittable};
 use crate::hittable_list::HittableList;
 use crate::material::Material;
 use crate::material::{Dielectric, Lambertian, Metal};
-use crate::moving_sphere::MovingSphere;
 use crate::ray::Ray;
 use crate::sphere::Sphere;
 use crate::vec3::{random_double, random_double_lr, unit_vector, Color, Point3, Vec3};
 
-const ASPECT_RATIO: f64 = 16.0 / 9.0;
-const WIDTH: usize = 400;
+const ASPECT_RATIO: f64 = 3.0 / 2.0;
+const WIDTH: usize = 1200;
 const HEIGHT: usize = (WIDTH as f64 / ASPECT_RATIO) as usize;
-const SAMPLES_PER_PIXEL: usize = 100;
+const SAMPLES_PER_PIXEL: usize = 500;
 const QUALITY: u8 = 100;
 const MAXDEPTH: isize = 50;
 
@@ -122,26 +120,11 @@ fn random_scene() -> HittableList {
                 } else {
                     Arc::new(Dielectric { ir: 1.5 })
                 };
-                if choose_mat < 0.8 {
-                    let center2_ = center_
-                        + Vec3 {
-                            e: [0.0, random_double_lr(0.0, 0.5), 0.0],
-                        };
-                    world.add(Box::new(MovingSphere {
-                        center0: center_,
-                        center1: center2_,
-                        time0: 0.0,
-                        time1: 1.0,
-                        radius: 0.2,
-                        mat_ptr: Some(sphere_material),
-                    }));
-                } else {
-                    world.add(Box::new(Sphere {
-                        center: center_,
-                        radius: 0.2,
-                        mat_ptr: Some(sphere_material),
-                    }));
-                }
+                world.add(Box::new(Sphere {
+                    center: center_,
+                    radius: 0.2,
+                    mat_ptr: Some(sphere_material),
+                }));
             }
         }
     }
@@ -195,8 +178,6 @@ fn main() {
         ASPECT_RATIO,
         aperture,
         dist_to_focus,
-        0.0,
-        1.0,
     );
 
     //Render

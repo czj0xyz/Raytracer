@@ -1,5 +1,5 @@
 use crate::ray::Ray;
-use crate::vec3::{cross, random_double_lr, random_in_unit_disk, unit_vector, Point3, Vec3};
+use crate::vec3::{cross, random_in_unit_disk, unit_vector, Point3, Vec3};
 use std::f64::consts::PI;
 
 fn degrees_to_radians(degrees: f64) -> f64 {
@@ -16,8 +16,6 @@ pub struct Camera {
     pub v: Vec3,
     pub w: Vec3,
     pub lens_radius: f64,
-    pub time0: f64,
-    pub time1: f64,
 }
 
 impl Camera {
@@ -29,7 +27,6 @@ impl Camera {
             dir: (*self).lower_left_corner + (*self).horizontal * s + (*self).vertical * t
                 - (*self).origin
                 - offset,
-            tm: random_double_lr((*self).time0, (*self).time1),
         }
     }
     pub fn creat(
@@ -40,8 +37,6 @@ impl Camera {
         aspect_ratio: f64,
         aperture: f64,
         focus_dist: f64,
-        _time0: f64,
-        _time1: f64,
     ) -> Camera {
         let theta = degrees_to_radians(vfov);
         let h = (theta / 2.0).tan();
@@ -67,8 +62,6 @@ impl Camera {
             v: v_,
             w: w_,
             lens_radius: aperture / 2.0,
-            time0: _time0,
-            time1: _time1,
         }
     }
 }
