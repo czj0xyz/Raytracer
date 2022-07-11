@@ -115,6 +115,21 @@ impl DivAssign<f64> for Vec3 {
 }
 
 impl Vec3 {
+    pub fn mul(&self, a: Vec3) -> Vec3 {
+        Vec3 {
+            e: [
+                (*self).e[0] * a.e[0],
+                (*self).e[1] * a.e[1],
+                (*self).e[2] * a.e[2],
+            ],
+        }
+    }
+
+    pub fn near_zero(&self) -> bool {
+        let s = 1e-8;
+        ((*self).e[0]).abs() < s && ((*self).e[1]).abs() < s && ((*self).e[2]).abs() < s
+    }
+
     pub fn length(&self) -> f64 {
         ((*self).e[0] * (*self).e[0] + (*self).e[1] * (*self).e[1] + (*self).e[2] * (*self).e[2])
             .sqrt()
@@ -178,17 +193,32 @@ pub fn random_in_unit_sphere() -> Vec3 {
     }
 }
 
-// pub fn random_unit_vector() -> Vec3 {
-//     unit_vector(random_in_unit_sphere())
+pub fn random_unit_vector() -> Vec3 {
+    unit_vector(random_in_unit_sphere())
+}
+
+// pub fn random_in_hemisphere(normal: Vec3) -> Vec3 {
+//     let in_unit_sphere = random_in_unit_sphere();
+//     if dot(in_unit_sphere, normal) > 0.0 {
+//         in_unit_sphere
+//     } else {
+//         Vec3 { e: [0.0; 3] } - in_unit_sphere
+//     }
 // }
 
-pub fn random_in_hemisphere(normal: Vec3) -> Vec3 {
-    let in_unit_sphere = random_in_unit_sphere();
-    if dot(in_unit_sphere, normal) > 0.0 {
-        in_unit_sphere
+pub fn reflect(v: Vec3, n: Vec3) -> Vec3 {
+    v - n * (2.0 * dot(v, n))
+}
+
+pub fn refract(uv: Vec3, n: Vec3, etai_over_etat: f64) -> Vec3 {
+    let cos_theta = if dot(Vec3 { e: [0.0; 3] } - uv, n) > 1.0 {
+        1.0
     } else {
-        Vec3 { e: [0.0; 3] } - in_unit_sphere
-    }
+        dot(Vec3 { e: [0.0; 3] } - uv, n)
+    };
+    let r_out_perp = (uv + n * cos_theta) * etai_over_etat;
+    let r_out_parallel = n * (-(((1.0 - r_out_perp.length_squared()).abs()).sqrt()));
+    r_out_perp + r_out_parallel
 }
 
 pub type Color = Vec3;
