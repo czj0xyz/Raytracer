@@ -206,6 +206,21 @@ pub fn random_unit_vector() -> Vec3 {
 //     }
 // }
 
+pub fn random_in_unit_disk() -> Vec3 {
+    loop {
+        let p = Vec3 {
+            e: [
+                random_double_lr(-1.0, 1.0),
+                random_double_lr(-1.0, 1.0),
+                0.0,
+            ],
+        };
+        if p.length_squared() < 1.0 {
+            break p;
+        }
+    }
+}
+
 pub fn reflect(v: Vec3, n: Vec3) -> Vec3 {
     v - n * (2.0 * dot(v, n))
 }

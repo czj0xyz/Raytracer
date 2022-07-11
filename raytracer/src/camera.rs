@@ -1,5 +1,5 @@
 use crate::ray::Ray;
-use crate::vec3::{cross, unit_vector, Point3, Vec3};
+use crate::vec3::{cross, random_in_unit_disk, unit_vector, Point3, Vec3};
 use std::f64::consts::PI;
 
 fn degrees_to_radians(degrees: f64) -> f64 {
@@ -12,44 +12,21 @@ pub struct Camera {
     pub lower_left_corner: Point3,
     pub horizontal: Vec3,
     pub vertical: Vec3,
-}
-
-impl Default for Camera {
-    fn default() -> Camera {
-        let aspect_ratio = 16.0 / 9.0;
-        let viewport_height = 2.0;
-        let viewport_width = aspect_ratio * viewport_height;
-        let focal_length = 1.0;
-
-        let origin_ = Point3 { e: [0.0; 3] };
-        let horizontal_ = Vec3 {
-            e: [viewport_width, 0.0, 0.0],
-        };
-        let vertical_ = Vec3 {
-            e: [0.0, viewport_height, 0.0],
-        };
-        let lower_left_corner_ = origin_
-            - horizontal_ / 2.0
-            - vertical_ / 2.0
-            - Vec3 {
-                e: [0.0, 0.0, focal_length],
-            };
-
-        Camera {
-            origin: origin_,
-            lower_left_corner: lower_left_corner_,
-            horizontal: horizontal_,
-            vertical: vertical_,
-        }
-    }
+    pub u: Vec3,
+    pub v: Vec3,
+    pub w: Vec3,
+    pub lens_radius: f64,
 }
 
 impl Camera {
     pub fn get_ray(&self, s: f64, t: f64) -> Ray {
+        let rd = random_in_unit_disk() * (*self).lens_radius;
+        let offset = (*self).u * rd.x() + (*self).v * rd.y();
         Ray {
-            st: (*self).origin,
+            st: (*self).origin + offset,
             dir: (*self).lower_left_corner + (*self).horizontal * s + (*self).vertical * t
-                - (*self).origin,
+                - (*self).origin
+                - offset,
         }
     }
     pub fn creat(
@@ -58,27 +35,33 @@ impl Camera {
         vup: Vec3,
         vfov: f64,
         aspect_ratio: f64,
+        aperture: f64,
+        focus_dist: f64,
     ) -> Camera {
         let theta = degrees_to_radians(vfov);
         let h = (theta / 2.0).tan();
         let viewport_height = 2.0 * h;
         let viewport_width = aspect_ratio * viewport_height;
 
-        let w = unit_vector(lookfrom - lookat);
-        let u = unit_vector(cross(vup, w));
-        let v = cross(w, u);
+        let w_ = unit_vector(lookfrom - lookat);
+        let u_ = unit_vector(cross(vup, w_));
+        let v_ = cross(w_, u_);
 
         // let focal_length = 1.0;
         let origin_ = lookfrom;
-        let horizontal_ = u * viewport_width;
-        let vertical_ = v * viewport_height;
-        let lower_left_corner_ = origin_ - horizontal_ / 2.0 - vertical_ / 2.0 - w;
+        let horizontal_ = u_ * viewport_width * focus_dist;
+        let vertical_ = v_ * viewport_height * focus_dist;
+        let lower_left_corner_ = origin_ - horizontal_ / 2.0 - vertical_ / 2.0 - w_ * focus_dist;
 
         Camera {
             origin: origin_,
             lower_left_corner: lower_left_corner_,
             horizontal: horizontal_,
             vertical: vertical_,
+            u: u_,
+            v: v_,
+            w: w_,
+            lens_radius: aperture / 2.0,
         }
     }
 }
