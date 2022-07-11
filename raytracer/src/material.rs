@@ -65,7 +65,7 @@ impl Material for Metal {
 }
 
 pub struct Dielectric {
-    ir: f64,
+    pub ir: f64,
 }
 
 impl Material for Dielectric {

@@ -15,7 +15,7 @@ mod vec3;
 use crate::camera::Camera;
 use crate::hittable::{HitRecord, Hittable};
 use crate::hittable_list::HittableList;
-use crate::material::{Lambertian, Metal};
+use crate::material::{Dielectric, Lambertian, Metal};
 use crate::ray::Ray;
 use crate::sphere::Sphere;
 use crate::vec3::{random_double, unit_vector, Color, Point3};
@@ -94,10 +94,8 @@ fn main() {
     let material_around = Arc::new(Lambertian {
         albedo: Color { e: [0.8, 0.8, 0.0] },
     });
-    let material_center = Arc::new(Lambertian {
-        albedo: Color { e: [0.7, 0.3, 0.3] },
-    });
-    let material_left = Arc::new(Metal::creat(Color { e: [0.8, 0.8, 0.8] }, 0.3));
+    let material_center = Arc::new(Dielectric { ir: 1.5 });
+    let material_left = Arc::new(Dielectric { ir: 1.5 });
     let material_right = Arc::new(Metal::creat(Color { e: [0.8, 0.6, 0.2] }, 1.0));
 
     world.add(Box::new(Sphere {
@@ -145,6 +143,13 @@ fn main() {
                 pixel_color += ray_color(r, &world, MAXDEPTH);
             }
             write_color(pixel_color, SAMPLES_PER_PIXEL, &mut img, i, j);
+        }
+        let output_image = image::DynamicImage::ImageRgb8(img.clone());
+        let mut output_file = File::create(path).unwrap();
+        match output_image.write_to(&mut output_file, image::ImageOutputFormat::Jpeg(QUALITY)) {
+            Ok(_) => {}
+            // Err(_) => panic!("Outputting image fails."),
+            Err(_) => println!("{}", style("Outputting image fails.").red()),
         }
     }
     eprintln!("Done !");
