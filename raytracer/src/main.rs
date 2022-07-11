@@ -15,15 +15,16 @@ mod vec3;
 use crate::camera::Camera;
 use crate::hittable::{HitRecord, Hittable};
 use crate::hittable_list::HittableList;
+use crate::material::Material;
 use crate::material::{Dielectric, Lambertian, Metal};
 use crate::ray::Ray;
 use crate::sphere::Sphere;
-use crate::vec3::{random_double, unit_vector, Color, Point3, Vec3};
+use crate::vec3::{random_double, random_double_lr, unit_vector, Color, Point3, Vec3};
 
-const ASPECT_RATIO: f64 = 16.0 / 9.0;
-const WIDTH: usize = 400;
+const ASPECT_RATIO: f64 = 3.0 / 2.0;
+const WIDTH: usize = 1200;
 const HEIGHT: usize = (WIDTH as f64 / ASPECT_RATIO) as usize;
-const SAMPLES_PER_PIXEL: usize = 100;
+const SAMPLES_PER_PIXEL: usize = 500;
 const QUALITY: u8 = 100;
 const MAXDEPTH: isize = 50;
 
@@ -84,6 +85,74 @@ fn ray_color(r: Ray, world: &impl Hittable, depth: isize) -> Color {
     }
 }
 
+fn random_scene() -> HittableList {
+    let mut world: HittableList = Default::default();
+
+    let ground_material = Arc::new(Lambertian {
+        albedo: Color { e: [0.5; 3] },
+    });
+    world.add(Box::new(Sphere {
+        center: Point3 {
+            e: [0.0, -1000.0, 0.0],
+        },
+        radius: 1000.0,
+        mat_ptr: Some(ground_material),
+    }));
+
+    for a in -11..11 {
+        for b in -11..11 {
+            let choose_mat = random_double();
+            let center_ = Point3 {
+                e: [
+                    a as f64 + 0.9 * random_double(),
+                    0.2,
+                    b as f64 + 0.9 * random_double(),
+                ],
+            };
+            if (center_ - Point3 { e: [4.0, 0.2, 0.0] }).length() > 0.9 {
+                let sphere_material: Arc<dyn Material> = if choose_mat < 0.8 {
+                    let albedo_ = Vec3::random().mul(Vec3::random());
+                    Arc::new(Lambertian { albedo: albedo_ })
+                } else if choose_mat < 0.95 {
+                    let albedo_ = Vec3::random_lr(0.5, 1.0);
+                    let fuzz_ = random_double_lr(0.0, 0.5);
+                    Arc::new(Metal::creat(albedo_, fuzz_))
+                } else {
+                    Arc::new(Dielectric { ir: 1.5 })
+                };
+                world.add(Box::new(Sphere {
+                    center: center_,
+                    radius: 0.2,
+                    mat_ptr: Some(sphere_material),
+                }));
+            }
+        }
+    }
+    world.add(Box::new(Sphere {
+        center: Point3 { e: [0.0, 1.0, 0.0] },
+        radius: 1.0,
+        mat_ptr: Some(Arc::new(Dielectric { ir: 1.5 })),
+    }));
+
+    world.add(Box::new(Sphere {
+        center: Point3 {
+            e: [-4.0, 1.0, 0.0],
+        },
+        radius: 1.0,
+        mat_ptr: Some(Arc::new(Lambertian {
+            albedo: Color { e: [0.4, 0.2, 0.1] },
+        })),
+    }));
+
+    world.add(Box::new(Sphere {
+        center: Point3 { e: [4.0, 1.0, 0.0] },
+        radius: 1.0,
+        mat_ptr: Some(Arc::new(Metal::creat(Color { e: [0.7, 0.6, 0.5] }, 0.0))),
+    }));
+
+    world
+}
+
 fn main() {
     // Image
     let path = "output/output.jpg";
@@ -91,60 +160,16 @@ fn main() {
 
     //World
 
-    let mut world: HittableList = Default::default();
-    let material_around = Arc::new(Lambertian {
-        albedo: Color { e: [0.8, 0.8, 0.0] },
-    });
-    let material_center = Arc::new(Lambertian {
-        albedo: Color { e: [0.1, 0.2, 0.5] },
-    });
-    let material_left = Arc::new(Dielectric { ir: 1.5 });
-    let material_right = Arc::new(Metal::creat(Color { e: [0.8, 0.6, 0.2] }, 0.0));
-
-    world.add(Box::new(Sphere {
-        center: Point3 {
-            e: [0.0, -100.5, -1.0],
-        },
-        radius: 100.0,
-        mat_ptr: Some(material_around),
-    }));
-    world.add(Box::new(Sphere {
-        center: Point3 {
-            e: [0.0, 0.0, -1.0],
-        },
-        radius: 0.5,
-        mat_ptr: Some(material_center),
-    }));
-    world.add(Box::new(Sphere {
-        center: Point3 {
-            e: [-1.0, 0.0, -1.0],
-        },
-        radius: 0.5,
-        mat_ptr: Some(material_left.clone()),
-    }));
-    world.add(Box::new(Sphere {
-        center: Point3 {
-            e: [-1.0, 0.0, -1.0],
-        },
-        radius: -0.45,
-        mat_ptr: Some(material_left),
-    }));
-    world.add(Box::new(Sphere {
-        center: Point3 {
-            e: [1.0, 0.0, -1.0],
-        },
-        radius: 0.5,
-        mat_ptr: Some(material_right),
-    }));
+    let world: HittableList = random_scene();
 
     //Camera
-    let lookfrom = Point3 { e: [3.0, 3.0, 2.0] };
-    let lookat = Point3 {
-        e: [0.0, 0.0, -1.0],
+    let lookfrom = Point3 {
+        e: [13.0, 2.0, 3.0],
     };
+    let lookat = Point3 { e: [0.0, 0.0, 0.0] };
     let vup = Vec3 { e: [0.0, 1.0, 0.0] };
-    let dist_to_focus = (lookfrom - lookat).length();
-    let aperture = 2.0;
+    let dist_to_focus = 10.0;
+    let aperture = 0.1;
     let cam = Camera::creat(
         lookfrom,
         lookat,

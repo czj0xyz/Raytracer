@@ -151,9 +151,11 @@ impl Vec3 {
         (*self).e[2]
     }
 
-    // pub fn random() -> Vec3{
-    //     Vec3 {e:[random_double(),random_double(),random_double()]}
-    // }
+    pub fn random() -> Vec3 {
+        Vec3 {
+            e: [random_double(), random_double(), random_double()],
+        }
+    }
 
     pub fn random_lr(min: f64, max: f64) -> Vec3 {
         Vec3 {
