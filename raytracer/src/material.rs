@@ -56,7 +56,7 @@ impl Material for Metal {
     ) -> bool {
         let reflected = reflect(unit_vector(r_in.get_dir()), rec.normal);
         *scattered = Ray {
-            st: rec.clone().p,
+            st: rec.p,
             dir: reflected + random_in_unit_sphere() * (*self).fuzz,
         };
         *attenuation = (*self).albedo;
