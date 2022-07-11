@@ -105,15 +105,15 @@ impl Material for Dielectric {
     }
 }
 
-impl Metal {
-    pub fn creat(a: Color, f: f64) -> Metal {
-        let ff = if f < 1.0 { f } else { 1.0 };
-        Metal {
-            albedo: a,
-            fuzz: ff,
-        }
-    }
-}
+// impl Metal {
+//     pub fn creat(a: Color, f: f64) -> Metal {
+//         let ff = if f < 1.0 { f } else { 1.0 };
+//         Metal {
+//             albedo: a,
+//             fuzz: ff,
+//         }
+//     }
+// }
 
 impl Dielectric {
     fn reflectance(cosine: f64, ref_idx: f64) -> f64 {
