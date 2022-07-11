@@ -94,9 +94,11 @@ fn main() {
     let material_around = Arc::new(Lambertian {
         albedo: Color { e: [0.8, 0.8, 0.0] },
     });
-    let material_center = Arc::new(Dielectric { ir: 1.5 });
+    let material_center = Arc::new(Lambertian {
+        albedo: Color { e: [0.1, 0.2, 0.5] },
+    });
     let material_left = Arc::new(Dielectric { ir: 1.5 });
-    let material_right = Arc::new(Metal::creat(Color { e: [0.8, 0.6, 0.2] }, 1.0));
+    let material_right = Arc::new(Metal::creat(Color { e: [0.8, 0.6, 0.2] }, 0.0));
 
     world.add(Box::new(Sphere {
         center: Point3 {

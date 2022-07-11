@@ -1,7 +1,8 @@
 use crate::hittable::HitRecord;
 use crate::ray::Ray;
 use crate::vec3::{
-    dot, random_in_unit_sphere, random_unit_vector, reflect, refract, unit_vector, Color,
+    dot, fmin, random_in_unit_sphere, random_unit_vector, reflect, refract, unit_vector, Color,
+    Vec3,
 };
 
 pub trait Material {
@@ -83,10 +84,20 @@ impl Material for Dielectric {
             (*self).ir
         };
         let unit_direction = unit_vector(r_in.get_dir());
-        let refracted = refract(unit_direction, rec.normal, refraction_ratio);
+
+        let cos_theta = fmin(dot(Vec3 { e: [0.0; 3] } - unit_direction, rec.normal), 1.0);
+        let sin_theta = (1.0 - cos_theta.powi(2)).sqrt();
+
+        let cannot_refract = refraction_ratio * sin_theta > 1.0;
+        let direction = if cannot_refract {
+            reflect(unit_direction, rec.normal)
+        } else {
+            refract(unit_direction, rec.normal, refraction_ratio)
+        };
+
         *scattered = Ray {
             st: rec.p,
-            dir: refracted,
+            dir: direction,
         };
         true
     }
