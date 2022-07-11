@@ -1,6 +1,5 @@
 use console::style;
 use image::{ImageBuffer, RgbImage};
-use std::f64::consts::PI;
 use std::f64::INFINITY;
 use std::sync::Arc;
 use std::{fs::File, process::exit};
@@ -16,10 +15,10 @@ mod vec3;
 use crate::camera::Camera;
 use crate::hittable::{HitRecord, Hittable};
 use crate::hittable_list::HittableList;
-use crate::material::Lambertian;
+use crate::material::{Dielectric, Lambertian, Metal};
 use crate::ray::Ray;
 use crate::sphere::Sphere;
-use crate::vec3::{random_double, unit_vector, Color, Point3};
+use crate::vec3::{random_double, unit_vector, Color, Point3, Vec3};
 
 const ASPECT_RATIO: f64 = 16.0 / 9.0;
 const WIDTH: usize = 400;
@@ -91,29 +90,65 @@ fn main() {
     let mut img: RgbImage = ImageBuffer::new(WIDTH as u32, HEIGHT as u32);
 
     //World
-    let r_ = (PI / 4.0).cos();
+
     let mut world: HittableList = Default::default();
-    let material_left = Arc::new(Lambertian {
-        albedo: Color { e: [0.0, 0.0, 1.0] },
+    let material_around = Arc::new(Lambertian {
+        albedo: Color { e: [0.8, 0.8, 0.0] },
     });
-    let material_right = Arc::new(Lambertian {
-        albedo: Color { e: [1.0, 0.0, 0.0] },
+    let material_center = Arc::new(Lambertian {
+        albedo: Color { e: [0.1, 0.2, 0.5] },
     });
+    let material_left = Arc::new(Dielectric { ir: 1.5 });
+    let material_right = Arc::new(Metal::creat(Color { e: [0.8, 0.6, 0.2] }, 0.0));
 
     world.add(Box::new(Sphere {
         center: Point3 {
-            e: [-r_, 0.0, -1.0],
+            e: [0.0, -100.5, -1.0],
         },
-        radius: r_,
+        radius: 100.0,
+        mat_ptr: Some(material_around),
+    }));
+    world.add(Box::new(Sphere {
+        center: Point3 {
+            e: [0.0, 0.0, -1.0],
+        },
+        radius: 0.5,
+        mat_ptr: Some(material_center),
+    }));
+    world.add(Box::new(Sphere {
+        center: Point3 {
+            e: [-1.0, 0.0, -1.0],
+        },
+        radius: 0.5,
+        mat_ptr: Some(material_left.clone()),
+    }));
+    world.add(Box::new(Sphere {
+        center: Point3 {
+            e: [-1.0, 0.0, -1.0],
+        },
+        radius: -0.45,
         mat_ptr: Some(material_left),
     }));
     world.add(Box::new(Sphere {
-        center: Point3 { e: [r_, 0.0, -1.0] },
-        radius: r_,
+        center: Point3 {
+            e: [1.0, 0.0, -1.0],
+        },
+        radius: 0.5,
         mat_ptr: Some(material_right),
     }));
+
     //Camera
-    let cam = Camera::creat(90.0, ASPECT_RATIO);
+    let cam = Camera::creat(
+        Point3 {
+            e: [-2.0, 2.0, 1.0],
+        },
+        Point3 {
+            e: [0.0, 0.0, -1.0],
+        },
+        Vec3 { e: [0.0, 1.0, 0.0] },
+        90.0,
+        ASPECT_RATIO,
+    );
 
     //Render
 

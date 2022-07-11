@@ -1,5 +1,5 @@
 use crate::ray::Ray;
-use crate::vec3::{Point3, Vec3};
+use crate::vec3::{cross, unit_vector, Point3, Vec3};
 use std::f64::consts::PI;
 
 fn degrees_to_radians(degrees: f64) -> f64 {
@@ -45,33 +45,34 @@ impl Default for Camera {
 }
 
 impl Camera {
-    pub fn get_ray(&self, u: f64, v: f64) -> Ray {
+    pub fn get_ray(&self, s: f64, t: f64) -> Ray {
         Ray {
             st: (*self).origin,
-            dir: (*self).lower_left_corner + (*self).horizontal * u + (*self).vertical * v
+            dir: (*self).lower_left_corner + (*self).horizontal * s + (*self).vertical * t
                 - (*self).origin,
         }
     }
-    pub fn creat(vfov: f64, aspect_ratio: f64) -> Camera {
+    pub fn creat(
+        lookfrom: Point3,
+        lookat: Point3,
+        vup: Vec3,
+        vfov: f64,
+        aspect_ratio: f64,
+    ) -> Camera {
         let theta = degrees_to_radians(vfov);
         let h = (theta / 2.0).tan();
         let viewport_height = 2.0 * h;
         let viewport_width = aspect_ratio * viewport_height;
 
-        let focal_length = 1.0;
-        let origin_ = Point3 { e: [0.0; 3] };
-        let horizontal_ = Vec3 {
-            e: [viewport_width, 0.0, 0.0],
-        };
-        let vertical_ = Vec3 {
-            e: [0.0, viewport_height, 0.0],
-        };
-        let lower_left_corner_ = origin_
-            - horizontal_ / 2.0
-            - vertical_ / 2.0
-            - Vec3 {
-                e: [0.0, 0.0, focal_length],
-            };
+        let w = unit_vector(lookfrom - lookat);
+        let u = unit_vector(cross(vup, w));
+        let v = cross(w, u);
+
+        // let focal_length = 1.0;
+        let origin_ = lookfrom;
+        let horizontal_ = u * viewport_width;
+        let vertical_ = v * viewport_height;
+        let lower_left_corner_ = origin_ - horizontal_ / 2.0 - vertical_ / 2.0 - w;
 
         Camera {
             origin: origin_,
