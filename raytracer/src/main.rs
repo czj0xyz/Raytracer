@@ -97,12 +97,8 @@ fn main() {
     let material_center = Arc::new(Lambertian {
         albedo: Color { e: [0.7, 0.3, 0.3] },
     });
-    let material_left = Arc::new(Metal {
-        albedo: Color { e: [0.8, 0.8, 0.8] },
-    });
-    let material_right = Arc::new(Metal {
-        albedo: Color { e: [0.8, 0.6, 0.2] },
-    });
+    let material_left = Arc::new(Metal::creat(Color { e: [0.8, 0.8, 0.8] }, 0.3));
+    let material_right = Arc::new(Metal::creat(Color { e: [0.8, 0.6, 0.2] }, 1.0));
 
     world.add(Box::new(Sphere {
         center: Point3 {
