@@ -1,4 +1,5 @@
 #### 当前进度：
+![image](https://github.com/czj0xyz/Image-folder/blob/main/Book2/Image1.jpg)
 
 ![banner](https://user-images.githubusercontent.com/4198311/89027545-461dd180-d35d-11ea-9972-7bf1b07f942d.png)
 
@@ -16,26 +17,6 @@
 - 项目助教：[PaperL](https://github.com/PaperL/)、[yichuan](https://github.com/yichuan520030910320)、[Alr_ksim](https://github.com/Alr-ksim)
 
 具体安排暂定如下（Day 1 = July 4th, 2022）：
-
-### 工科
-
-- **日程**
-
-  - **Day 1**：介绍项目与前期准备（Task 0）
-  - **Day 2 - 3**：熟悉 Rust 语法（Task 1）
-  - **Day 4 - 7**：学习完成教程 book 1 & 2（Task 2）
-  - **Day 8 - 9**：自行设计创作结课作品
-  - **Day 10**：结课分享 & code review
-
-- **分数**
-
-  - | 任务                       | 分数占比（总计 100%）                 |
-    | -------------------------- | ------------------------------------- |
-    | **Task 0**                 | 10%                                   |
-    | **Task 1**                 | 30%                                   |
-    | **Task 2**                 | 40%                                   |
-    | **结课作品 & code review** | 20%                                   |
-    | 结课分享                   | 10% *（作为 Bonus，总分不溢出 100%）* |
 
 ### ACM 班
 

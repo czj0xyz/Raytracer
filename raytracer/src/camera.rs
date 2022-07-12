@@ -32,6 +32,7 @@ impl Camera {
             tm: random_double_lr((*self).time0, (*self).time1),
         }
     }
+    #[allow(clippy::too_many_arguments)]
     pub fn creat(
         lookfrom: Point3,
         lookat: Point3,
