@@ -1,7 +1,8 @@
 use console::style;
 use image::{ImageBuffer, RgbImage};
 use std::f64::INFINITY;
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
+use std::thread;
 use std::{fs::File, process::exit};
 
 mod camera;
@@ -93,7 +94,7 @@ fn random_scene() -> HittableList {
     let ground_material = Arc::new(Lambertian {
         albedo: Color { e: [0.5; 3] },
     });
-    world.add(Box::new(Sphere {
+    world.add(Arc::new(Sphere {
         center: Point3 {
             e: [0.0, -1000.0, 0.0],
         },
@@ -127,7 +128,7 @@ fn random_scene() -> HittableList {
                         + Vec3 {
                             e: [0.0, random_double_lr(0.0, 0.5), 0.0],
                         };
-                    world.add(Box::new(MovingSphere {
+                    world.add(Arc::new(MovingSphere {
                         center0: center_,
                         center1: center2_,
                         time0: 0.0,
@@ -136,7 +137,7 @@ fn random_scene() -> HittableList {
                         mat_ptr: Some(sphere_material),
                     }));
                 } else {
-                    world.add(Box::new(Sphere {
+                    world.add(Arc::new(Sphere {
                         center: center_,
                         radius: 0.2,
                         mat_ptr: Some(sphere_material),
@@ -145,13 +146,13 @@ fn random_scene() -> HittableList {
             }
         }
     }
-    world.add(Box::new(Sphere {
+    world.add(Arc::new(Sphere {
         center: Point3 { e: [0.0, 1.0, 0.0] },
         radius: 1.0,
         mat_ptr: Some(Arc::new(Dielectric { ir: 1.5 })),
     }));
 
-    world.add(Box::new(Sphere {
+    world.add(Arc::new(Sphere {
         center: Point3 {
             e: [-4.0, 1.0, 0.0],
         },
@@ -161,13 +162,28 @@ fn random_scene() -> HittableList {
         })),
     }));
 
-    world.add(Box::new(Sphere {
+    world.add(Arc::new(Sphere {
         center: Point3 { e: [4.0, 1.0, 0.0] },
         radius: 1.0,
         mat_ptr: Some(Arc::new(Metal::creat(Color { e: [0.7, 0.6, 0.5] }, 0.0))),
     }));
 
     world
+}
+
+fn solve(cam: &Camera, world: &HittableList, j: usize) -> (usize, Vec<Color>) {
+    let mut ret: Vec<Color> = Default::default();
+    for i in 0..WIDTH {
+        let mut pixel_color: Color = Color { e: [0.0; 3] };
+        for _ in 0..SAMPLES_PER_PIXEL {
+            let u = (i as f64 + random_double()) / ((WIDTH - 1) as f64);
+            let v = (j as f64 + random_double()) / ((HEIGHT - 1) as f64);
+            let r: Ray = (*cam).get_ray(u, v);
+            pixel_color += ray_color(r, world, MAXDEPTH);
+        }
+        ret.push(pixel_color);
+    }
+    (j, ret)
 }
 
 fn main() {
@@ -201,27 +217,39 @@ fn main() {
 
     //Render
 
-    for j in (0..HEIGHT).rev() {
-        eprintln!("Scanlines remaining: {}", j);
-
-        for i in 0..WIDTH {
-            let mut pixel_color: Color = Color { e: [0.0; 3] };
-            for _ in 0..SAMPLES_PER_PIXEL {
-                let u = (i as f64 + random_double()) / ((WIDTH - 1) as f64);
-                let v = (j as f64 + random_double()) / ((HEIGHT - 1) as f64);
-                let r: Ray = cam.get_ray(u, v);
-                pixel_color += ray_color(r, &world, MAXDEPTH);
+    let mut handles = vec![];
+    let lines = Arc::new(Mutex::new(0));
+    for _ in 0..20 {
+        let counter = Arc::clone(&lines);
+        let cam_ = cam.clone();
+        let world_ = world.clone();
+        let handle = thread::spawn(move || -> Vec<(usize, Vec<Color>)> {
+            let mut ret: Vec<(usize, Vec<Color>)> = Default::default();
+            loop {
+                let mut num = counter.lock().unwrap();
+                eprintln!("Scanlines remaining: {}", *num);
+                if (*num) == HEIGHT {
+                    break ret;
+                }
+                let y = *num;
+                *num += 1;
+                std::mem::drop(num);
+                ret.push(solve(&cam_, &world_, y));
             }
-            write_color(pixel_color, SAMPLES_PER_PIXEL, &mut img, i, j);
-        }
-        let output_image = image::DynamicImage::ImageRgb8(img.clone());
-        let mut output_file = File::create(path).unwrap();
-        match output_image.write_to(&mut output_file, image::ImageOutputFormat::Jpeg(QUALITY)) {
-            Ok(_) => {}
-            // Err(_) => panic!("Outputting image fails."),
-            Err(_) => println!("{}", style("Outputting image fails.").red()),
+        });
+        handles.push(handle);
+    }
+
+    for handle in handles {
+        let color_vec = handle.join().unwrap();
+        for obj in color_vec {
+            let y = obj.0;
+            for x in 0..WIDTH {
+                write_color(obj.1[x], SAMPLES_PER_PIXEL, &mut img, x, y);
+            }
         }
     }
+
     eprintln!("Done !");
     //output
     let output_image = image::DynamicImage::ImageRgb8(img);
