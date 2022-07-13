@@ -218,10 +218,13 @@ fn main() {
     //Render
 
     let mut handles = vec![];
+
+    #[warn(clippy::mutex_atomic)]
     let lines = Arc::new(Mutex::new(0));
+
     for _ in 0..20 {
         let counter = Arc::clone(&lines);
-        let cam_ = cam.clone();
+        let cam_ = cam;
         let world_ = world.clone();
         let handle = thread::spawn(move || -> Vec<(usize, Vec<Color>)> {
             let mut ret: Vec<(usize, Vec<Color>)> = Default::default();
