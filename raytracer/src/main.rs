@@ -219,7 +219,7 @@ fn main() {
 
     let mut handles = vec![];
 
-    #[warn(clippy::mutex_atomic)]
+    #[allow(clippy::mutex_atomic)]
     let lines = Arc::new(Mutex::new(0));
 
     for _ in 0..20 {
