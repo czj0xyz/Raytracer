@@ -21,6 +21,15 @@ pub struct CheckerTexture {
     pub even: Arc<dyn Texture>,
 }
 
+impl CheckerTexture {
+    pub fn creat(a: Color, b: Color) -> CheckerTexture {
+        CheckerTexture {
+            odd: Arc::new(SolidColor { color_value: b }),
+            even: Arc::new(SolidColor { color_value: a }),
+        }
+    }
+}
+
 impl Texture for CheckerTexture {
     fn value(&self, u: f64, v: f64, p: Point3) -> Color {
         let sines = (10.0 * p.x()).sin() * (10.0 * p.y()).sin() * (10.0 * p.z()).sin();

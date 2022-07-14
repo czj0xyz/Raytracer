@@ -25,7 +25,7 @@ use crate::material::{Dielectric, Lambertian, Metal};
 use crate::moving_sphere::MovingSphere;
 use crate::ray::Ray;
 use crate::sphere::Sphere;
-use crate::texture::{CheckerTexture, SolidColor};
+use crate::texture::CheckerTexture;
 use crate::vec3::{random_double, random_double_lr, unit_vector, Color, Point3, Vec3};
 
 const ASPECT_RATIO: f64 = 16.0 / 9.0;
@@ -95,15 +95,10 @@ fn ray_color(r: Ray, world: &impl Hittable, depth: isize) -> Color {
 fn random_scene() -> HittableList {
     let mut world: HittableList = Default::default();
 
-    let checker = Arc::new(CheckerTexture {
-        odd: Arc::new(SolidColor {
-            color_value: Color { e: [0.2, 0.3, 0.1] },
-        }),
-        even: Arc::new(SolidColor {
-            color_value: Color { e: [0.9, 0.9, 0.9] },
-        }),
-    });
-
+    let checker = Arc::new(CheckerTexture::creat(
+        Color { e: [0.2, 0.3, 0.1] },
+        Color { e: [0.9; 3] },
+    ));
     world.add(Arc::new(Sphere {
         center: Point3 {
             e: [0.0, -1000.0, 0.0],
@@ -181,6 +176,35 @@ fn random_scene() -> HittableList {
     world
 }
 
+fn two_spheres() -> HittableList {
+    let mut objects: HittableList = Default::default();
+    let checker = Arc::new(CheckerTexture::creat(
+        Color { e: [0.2, 0.3, 0.1] },
+        Color { e: [0.9; 3] },
+    ));
+    objects.add(Arc::new(Sphere {
+        center: Point3 {
+            e: [0.0, -10.0, 0.0],
+        },
+        radius: 10.0,
+        mat_ptr: Some(Arc::new(Lambertian {
+            albedo: Some(checker.clone()),
+        })),
+    }));
+
+    objects.add(Arc::new(Sphere {
+        center: Point3 {
+            e: [0.0, 10.0, 0.0],
+        },
+        radius: 10.0,
+        mat_ptr: Some(Arc::new(Lambertian {
+            albedo: Some(checker),
+        })),
+    }));
+
+    objects
+}
+
 fn solve(cam: &Camera, world: &HittableList, j: usize) -> (usize, Vec<Color>) {
     let mut ret: Vec<Color> = Default::default();
     for i in 0..WIDTH {
@@ -202,22 +226,41 @@ fn main() {
     let mut img: RgbImage = ImageBuffer::new(WIDTH as u32, HEIGHT as u32);
 
     //World
+    let world: HittableList;
+    let lookfrom: Point3;
+    let lookat: Point3;
+    let vfov;
+    let mut aperture = 0.0;
 
-    let world: HittableList = random_scene();
+    let opt = 0;
+    match opt {
+        1 => {
+            world = random_scene();
+            lookfrom = Point3 {
+                e: [13.0, 2.0, 3.0],
+            };
+            lookat = Point3 { e: [0.0; 3] };
+            vfov = 20.0;
+            aperture = 0.1;
+        }
+        _ => {
+            world = two_spheres();
+            lookfrom = Point3 {
+                e: [13.0, 2.0, 3.0],
+            };
+            lookat = Point3 { e: [0.0; 3] };
+            vfov = 20.0;
+        }
+    }
 
     //Camera
-    let lookfrom = Point3 {
-        e: [13.0, 2.0, 3.0],
-    };
-    let lookat = Point3 { e: [0.0, 0.0, 0.0] };
     let vup = Vec3 { e: [0.0, 1.0, 0.0] };
     let dist_to_focus = 10.0;
-    let aperture = 0.1;
     let cam = Camera::creat(
         lookfrom,
         lookat,
         vup,
-        20.0,
+        vfov,
         ASPECT_RATIO,
         aperture,
         dist_to_focus,
