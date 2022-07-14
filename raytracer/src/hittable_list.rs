@@ -1,3 +1,4 @@
+use crate::aabb::{surrounding_box, Aabb};
 use crate::hittable::{HitRecord, Hittable};
 use crate::ray::Ray;
 use std::sync::Arc;
@@ -30,5 +31,27 @@ impl Hittable for HittableList {
             }
         }
         hit_anything
+    }
+
+    fn bounding_box(&self, t0: f64, t1: f64, output_box: &mut Aabb) -> bool {
+        if (*self).objects.is_empty() {
+            false
+        } else {
+            let mut temp_box: Aabb = Default::default();
+            let mut first = true;
+            let mut ret = true;
+            for obj in &(*self).objects {
+                if obj.bounding_box(t0, t1, &mut temp_box) {
+                    ret = false;
+                }
+                *output_box = if first {
+                    temp_box
+                } else {
+                    surrounding_box(*output_box, temp_box)
+                };
+                first = false;
+            }
+            ret
+        }
     }
 }

@@ -1,3 +1,4 @@
+use crate::aabb::{surrounding_box, Aabb};
 use crate::hittable::{HitRecord, Hittable};
 use crate::material::Material;
 use crate::ray::Ray;
@@ -48,5 +49,31 @@ impl Hittable for MovingSphere {
             rec.mat_ptr = (*self).mat_ptr.clone();
         }
         ret
+    }
+    fn bounding_box(&self, t0: f64, t1: f64, output_box: &mut Aabb) -> bool {
+        let box0 = Aabb {
+            min: (*self).center(t0)
+                - Point3 {
+                    e: [(*self).radius; 3],
+                },
+            max: (*self).center(t0)
+                + Point3 {
+                    e: [(*self).radius; 3],
+                },
+        };
+
+        let box1 = Aabb {
+            min: (*self).center(t1)
+                - Point3 {
+                    e: [(*self).radius; 3],
+                },
+            max: (*self).center(t1)
+                + Point3 {
+                    e: [(*self).radius; 3],
+                },
+        };
+
+        *output_box = surrounding_box(box0, box1);
+        true
     }
 }

@@ -5,6 +5,8 @@ use std::sync::{Arc, Mutex};
 use std::thread;
 use std::{fs::File, process::exit};
 
+mod aabb;
+mod bvh;
 mod camera;
 mod hittable;
 mod hittable_list;
@@ -12,6 +14,7 @@ mod material;
 mod moving_sphere;
 mod ray;
 mod sphere;
+mod texture;
 mod vec3;
 
 use crate::camera::Camera;
@@ -22,6 +25,7 @@ use crate::material::{Dielectric, Lambertian, Metal};
 use crate::moving_sphere::MovingSphere;
 use crate::ray::Ray;
 use crate::sphere::Sphere;
+use crate::texture::{CheckerTexture, SolidColor};
 use crate::vec3::{random_double, random_double_lr, unit_vector, Color, Point3, Vec3};
 
 const ASPECT_RATIO: f64 = 16.0 / 9.0;
@@ -91,15 +95,23 @@ fn ray_color(r: Ray, world: &impl Hittable, depth: isize) -> Color {
 fn random_scene() -> HittableList {
     let mut world: HittableList = Default::default();
 
-    let ground_material = Arc::new(Lambertian {
-        albedo: Color { e: [0.5; 3] },
+    let checker = Arc::new(CheckerTexture {
+        odd: Arc::new(SolidColor {
+            color_value: Color { e: [0.2, 0.3, 0.1] },
+        }),
+        even: Arc::new(SolidColor {
+            color_value: Color { e: [0.9, 0.9, 0.9] },
+        }),
     });
+
     world.add(Arc::new(Sphere {
         center: Point3 {
             e: [0.0, -1000.0, 0.0],
         },
         radius: 1000.0,
-        mat_ptr: Some(ground_material),
+        mat_ptr: Some(Arc::new(Lambertian {
+            albedo: Some(checker),
+        })),
     }));
 
     for a in -11..11 {
@@ -115,7 +127,7 @@ fn random_scene() -> HittableList {
             if (center_ - Point3 { e: [4.0, 0.2, 0.0] }).length() > 0.9 {
                 let sphere_material: Arc<dyn Material> = if choose_mat < 0.8 {
                     let albedo_ = Vec3::random().mul(Vec3::random());
-                    Arc::new(Lambertian { albedo: albedo_ })
+                    Arc::new(Lambertian::creat(albedo_))
                 } else if choose_mat < 0.95 {
                     let albedo_ = Vec3::random_lr(0.5, 1.0);
                     let fuzz_ = random_double_lr(0.0, 0.5);
@@ -157,9 +169,7 @@ fn random_scene() -> HittableList {
             e: [-4.0, 1.0, 0.0],
         },
         radius: 1.0,
-        mat_ptr: Some(Arc::new(Lambertian {
-            albedo: Color { e: [0.4, 0.2, 0.1] },
-        })),
+        mat_ptr: Some(Arc::new(Lambertian::creat(Color { e: [0.4, 0.2, 0.1] }))),
     }));
 
     world.add(Arc::new(Sphere {

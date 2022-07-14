@@ -222,6 +222,10 @@ pub fn random_in_unit_disk() -> Vec3 {
         }
     }
 }
+#[allow(dead_code)]
+pub fn random_int_lr(min: isize, max: isize) -> isize {
+    random_double_lr(min as f64, (max + 1) as f64) as isize
+}
 
 pub fn reflect(v: Vec3, n: Vec3) -> Vec3 {
     v - n * (2.0 * dot(v, n))
@@ -232,6 +236,13 @@ pub fn fmin(a: f64, b: f64) -> f64 {
         a
     } else {
         b
+    }
+}
+pub fn fmax(a: f64, b: f64) -> f64 {
+    if a < b {
+        b
+    } else {
+        a
     }
 }
 
