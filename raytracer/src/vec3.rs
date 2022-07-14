@@ -222,7 +222,7 @@ pub fn random_in_unit_disk() -> Vec3 {
         }
     }
 }
-#[allow(dead_code)]
+
 pub fn random_int_lr(min: isize, max: isize) -> isize {
     random_double_lr(min as f64, (max + 1) as f64) as isize
 }

@@ -12,6 +12,7 @@ mod hittable;
 mod hittable_list;
 mod material;
 mod moving_sphere;
+mod perlin;
 mod ray;
 mod sphere;
 mod texture;
@@ -25,7 +26,7 @@ use crate::material::{Dielectric, Lambertian, Metal};
 use crate::moving_sphere::MovingSphere;
 use crate::ray::Ray;
 use crate::sphere::Sphere;
-use crate::texture::CheckerTexture;
+use crate::texture::{CheckerTexture, NoiseTexture};
 use crate::vec3::{random_double, random_double_lr, unit_vector, Color, Point3, Vec3};
 
 const ASPECT_RATIO: f64 = 16.0 / 9.0;
@@ -205,6 +206,32 @@ fn two_spheres() -> HittableList {
     objects
 }
 
+fn two_perlin_spheres() -> HittableList {
+    let mut objects: HittableList = Default::default();
+    let pertext = Arc::new(NoiseTexture {
+        noise: Default::default(),
+    });
+    objects.add(Arc::new(Sphere {
+        center: Point3 {
+            e: [0.0, -1000.0, 0.0],
+        },
+        radius: 1000.0,
+        mat_ptr: Some(Arc::new(Lambertian {
+            albedo: Some(pertext.clone()),
+        })),
+    }));
+
+    objects.add(Arc::new(Sphere {
+        center: Point3 { e: [0.0, 2.0, 0.0] },
+        radius: 2.0,
+        mat_ptr: Some(Arc::new(Lambertian {
+            albedo: Some(pertext),
+        })),
+    }));
+
+    objects
+}
+
 fn solve(cam: &Camera, world: &HittableList, j: usize) -> (usize, Vec<Color>) {
     let mut ret: Vec<Color> = Default::default();
     for i in 0..WIDTH {
@@ -243,8 +270,16 @@ fn main() {
             vfov = 20.0;
             aperture = 0.1;
         }
-        _ => {
+        2 => {
             world = two_spheres();
+            lookfrom = Point3 {
+                e: [13.0, 2.0, 3.0],
+            };
+            lookat = Point3 { e: [0.0; 3] };
+            vfov = 20.0;
+        }
+        _ => {
+            world = two_perlin_spheres();
             lookfrom = Point3 {
                 e: [13.0, 2.0, 3.0],
             };
