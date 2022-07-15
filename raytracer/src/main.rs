@@ -208,9 +208,7 @@ fn two_spheres() -> HittableList {
 
 fn two_perlin_spheres() -> HittableList {
     let mut objects: HittableList = Default::default();
-    let pertext = Arc::new(NoiseTexture {
-        noise: Default::default(),
-    });
+    let pertext = Arc::new(NoiseTexture::creat(4.0));
     objects.add(Arc::new(Sphere {
         center: Point3 {
             e: [0.0, -1000.0, 0.0],
