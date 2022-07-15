@@ -49,7 +49,9 @@ pub struct NoiseTexture {
 
 impl Texture for NoiseTexture {
     fn value(&self, _u: f64, _v: f64, p: Point3) -> Color {
-        Color { e: [1.0; 3] } * (*self).noise.turb(p * (*self).scale, 7)
+        Color { e: [1.0; 3] }
+            * 0.5
+            * (1.0 + ((*self).scale * p.z() + 10.0 * (*self).noise.turb(p, 7)).sin())
     }
 }
 
