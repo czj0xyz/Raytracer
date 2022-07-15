@@ -316,10 +316,10 @@ fn main() {
             let mut ret: Vec<(usize, Vec<Color>)> = Default::default();
             loop {
                 let mut num = counter.lock().unwrap();
-                eprintln!("Scanlines remaining: {}", *num);
                 if (*num) == HEIGHT {
                     break ret;
                 }
+                eprintln!("Scanlines remaining: {}", *num);
                 let y = *num;
                 *num += 1;
                 std::mem::drop(num);
