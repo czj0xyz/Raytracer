@@ -253,6 +253,16 @@ pub fn refract(uv: Vec3, n: Vec3, etai_over_etat: f64) -> Vec3 {
     r_out_perp + r_out_parallel
 }
 
+pub fn clamp(value: f64, min: f64, max: f64) -> f64 {
+    if value < min {
+        min
+    } else if value > max {
+        max
+    } else {
+        value
+    }
+}
+
 pub type Color = Vec3;
 
 pub type Point3 = Vec3;

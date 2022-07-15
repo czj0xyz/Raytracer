@@ -26,8 +26,8 @@ use crate::material::{Dielectric, Lambertian, Metal};
 use crate::moving_sphere::MovingSphere;
 use crate::ray::Ray;
 use crate::sphere::Sphere;
-use crate::texture::{CheckerTexture, NoiseTexture};
-use crate::vec3::{random_double, random_double_lr, unit_vector, Color, Point3, Vec3};
+use crate::texture::{CheckerTexture, ImageTexture, NoiseTexture};
+use crate::vec3::{clamp, random_double, random_double_lr, unit_vector, Color, Point3, Vec3};
 
 const ASPECT_RATIO: f64 = 16.0 / 9.0;
 const WIDTH: usize = 400;
@@ -35,16 +35,6 @@ const HEIGHT: usize = (WIDTH as f64 / ASPECT_RATIO) as usize;
 const SAMPLES_PER_PIXEL: usize = 100;
 const QUALITY: u8 = 100;
 const MAXDEPTH: isize = 50;
-
-fn clamp(value: f64, min: f64, max: f64) -> f64 {
-    if value < min {
-        min
-    } else if value > max {
-        max
-    } else {
-        value
-    }
-}
 
 fn write_color(
     pixel_color: Color,
@@ -230,6 +220,24 @@ fn two_perlin_spheres() -> HittableList {
     objects
 }
 
+fn earth() -> HittableList {
+    let mut objects: HittableList = Default::default();
+
+    let earth_texture = Arc::new(ImageTexture::creat("raytracer/src/picture/earthmap.jpg"));
+    let earth_surface = Arc::new(Lambertian {
+        albedo: Some(earth_texture),
+    });
+    let globe = Arc::new(Sphere {
+        center: Point3 { e: [0.0; 3] },
+        radius: 2.0,
+        mat_ptr: Some(earth_surface),
+    });
+
+    objects.add(globe);
+
+    objects
+}
+
 fn solve(cam: &Camera, world: &HittableList, j: usize) -> (usize, Vec<Color>) {
     let mut ret: Vec<Color> = Default::default();
     for i in 0..WIDTH {
@@ -276,8 +284,16 @@ fn main() {
             lookat = Point3 { e: [0.0; 3] };
             vfov = 20.0;
         }
-        _ => {
+        3 => {
             world = two_perlin_spheres();
+            lookfrom = Point3 {
+                e: [13.0, 2.0, 3.0],
+            };
+            lookat = Point3 { e: [0.0; 3] };
+            vfov = 20.0;
+        }
+        _ => {
+            world = earth();
             lookfrom = Point3 {
                 e: [13.0, 2.0, 3.0],
             };

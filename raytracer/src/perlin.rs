@@ -1,5 +1,6 @@
 use crate::vec3::{dot, random_int_lr, unit_vector, Point3, Vec3};
 
+#[derive(Clone)]
 pub struct Perlin {
     pub ranvec: Vec<Vec3>,
     pub perm_x: Vec<usize>,

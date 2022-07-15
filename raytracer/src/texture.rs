@@ -1,11 +1,12 @@
 use crate::perlin::Perlin;
-use crate::vec3::{Color, Point3};
+use crate::vec3::{clamp, Color, Point3};
+use image::*;
 use std::sync::Arc;
 pub trait Texture: Send + Sync {
     fn value(&self, u: f64, v: f64, p: Point3) -> Color;
 }
 
-#[derive(Default, Clone)]
+#[derive(Default, Clone, Copy)]
 pub struct SolidColor {
     pub color_value: Color,
 }
@@ -42,6 +43,7 @@ impl Texture for CheckerTexture {
     }
 }
 
+#[derive(Clone)]
 pub struct NoiseTexture {
     pub noise: Perlin,
     pub scale: f64,
@@ -60,6 +62,58 @@ impl NoiseTexture {
         NoiseTexture {
             noise: Default::default(),
             scale: sc,
+        }
+    }
+}
+
+#[derive(Clone)]
+pub struct ImageTexture {
+    data: DynamicImage,
+    width: usize,
+    height: usize,
+}
+
+impl ImageTexture {
+    pub fn creat(file: &str) -> ImageTexture {
+        let ret = image::open(file).unwrap();
+        let w = ret.width() as usize;
+        let h = ret.height() as usize;
+        ImageTexture {
+            data: ret,
+            width: w,
+            height: h,
+        }
+    }
+}
+
+impl Texture for ImageTexture {
+    fn value(&self, u: f64, v: f64, _p: Point3) -> Color {
+        let u = clamp(u, 0.0, 1.0);
+        let v = 1.0 - clamp(v, 0.0, 1.0);
+        let mut i = (u * (*self).width as f64) as usize;
+        let mut j = (v * (*self).height as f64) as usize;
+
+        i = if i >= (*self).width {
+            (*self).width - 1
+        } else {
+            i
+        };
+        j = if j >= (*self).height {
+            (*self).height - 1
+        } else {
+            j
+        };
+
+        let color_scale = 1.0 / 255.0;
+
+        let pixel = (*self).data.get_pixel(i as u32, j as u32);
+
+        Color {
+            e: [
+                pixel.0[0] as f64 * color_scale,
+                pixel.0[1] as f64 * color_scale,
+                pixel.0[2] as f64 * color_scale,
+            ],
         }
     }
 }
