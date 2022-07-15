@@ -46,9 +46,13 @@ impl Perlin {
     }
 
     pub fn noise(&self, p: Point3) -> f64 {
-        let u_fl = p.x() - p.x().floor();
-        let v_fl = p.y() - p.y().floor();
-        let w_fl = p.z() - p.z().floor();
+        let mut u_fl = p.x() - p.x().floor();
+        let mut v_fl = p.y() - p.y().floor();
+        let mut w_fl = p.z() - p.z().floor();
+        u_fl = u_fl.powi(2) * (3.0 - 2.0 * u_fl);
+        v_fl = v_fl.powi(2) * (3.0 - 2.0 * v_fl);
+        w_fl = w_fl.powi(2) * (3.0 - 2.0 * w_fl);
+
         let i = p.x().floor() as isize;
         let j = p.y().floor() as isize;
         let k = p.z().floor() as isize;
