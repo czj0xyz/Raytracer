@@ -10,6 +10,18 @@ pub struct Perlin {
 const POINT_COUNT: usize = 256;
 
 impl Perlin {
+    pub fn turb(&self, p: Point3, depth: usize) -> f64 {
+        let mut accum = 0.0;
+        let mut temp_p = p;
+        let mut weight = 1.0;
+        for _ in 0..depth {
+            accum += weight * (*self).noise(temp_p);
+            weight *= 0.5;
+            temp_p *= 2.0;
+        }
+        accum.abs()
+    }
+
     fn permute(p: &mut Vec<usize>) {
         for i in (0..p.len()).rev() {
             let id = random_int_lr(0, i as isize) as usize;
