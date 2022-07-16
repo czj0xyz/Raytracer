@@ -3,7 +3,7 @@ use crate::ray::Ray;
 use crate::texture::*;
 use crate::vec3::{
     dot, fmin, random_double, random_in_unit_sphere, random_unit_vector, reflect, refract,
-    unit_vector, Color, Vec3,
+    unit_vector, Color, Point3, Vec3,
 };
 
 use std::sync::Arc;
@@ -16,6 +16,10 @@ pub trait Material: Send + Sync {
         attenuation: &mut Color,
         scattered: &mut Ray,
     ) -> bool;
+
+    fn emitted(&self, _u: f64, _v: f64, _p: Point3) -> Color {
+        Color { e: [0.0; 3] }
+    }
 }
 
 #[derive(Default, Clone)]
@@ -136,5 +140,38 @@ impl Dielectric {
     fn reflectance(cosine: f64, ref_idx: f64) -> f64 {
         let r0 = ((1.0 - ref_idx) / (1.0 + ref_idx)).powi(2);
         r0 + (1.0 - r0) * ((1.0 - cosine).powi(5))
+    }
+}
+
+#[derive(Clone)]
+pub struct DiffuseLight {
+    emit: Arc<dyn Texture>,
+}
+
+impl DiffuseLight {
+    pub fn creat_color(c: Color) -> DiffuseLight {
+        DiffuseLight {
+            emit: Arc::new(SolidColor { color_value: c }),
+        }
+    }
+    #[allow(dead_code)]
+    pub fn creat_ptr(c: Arc<dyn Texture>) -> DiffuseLight {
+        DiffuseLight { emit: c }
+    }
+}
+
+impl Material for DiffuseLight {
+    fn scatter(
+        &self,
+        _r_in: Ray,
+        _rec: HitRecord,
+        _attenuation: &mut Color,
+        _scattered: &mut Ray,
+    ) -> bool {
+        false
+    }
+
+    fn emitted(&self, u: f64, v: f64, p: Point3) -> Color {
+        (*self).emit.value(u, v, p)
     }
 }

@@ -6,6 +6,7 @@ use std::thread;
 use std::{fs::File, process::exit};
 
 mod aabb;
+mod aarect;
 mod bvh;
 mod camera;
 mod hittable;
@@ -18,21 +19,21 @@ mod sphere;
 mod texture;
 mod vec3;
 
+use crate::aarect::XyRect;
 use crate::camera::Camera;
 use crate::hittable::{HitRecord, Hittable};
 use crate::hittable_list::HittableList;
 use crate::material::Material;
-use crate::material::{Dielectric, Lambertian, Metal};
+use crate::material::{Dielectric, DiffuseLight, Lambertian, Metal};
 use crate::moving_sphere::MovingSphere;
 use crate::ray::Ray;
 use crate::sphere::Sphere;
 use crate::texture::{CheckerTexture, ImageTexture, NoiseTexture};
-use crate::vec3::{clamp, random_double, random_double_lr, unit_vector, Color, Point3, Vec3};
+use crate::vec3::{clamp, random_double, random_double_lr, Color, Point3, Vec3};
 
 const ASPECT_RATIO: f64 = 16.0 / 9.0;
 const WIDTH: usize = 400;
 const HEIGHT: usize = (WIDTH as f64 / ASPECT_RATIO) as usize;
-const SAMPLES_PER_PIXEL: usize = 100;
 const QUALITY: u8 = 100;
 const MAXDEPTH: isize = 50;
 
@@ -57,7 +58,7 @@ fn write_color(
 }
 //Image
 
-fn ray_color(r: Ray, world: &impl Hittable, depth: isize) -> Color {
+fn ray_color(r: Ray, background: Color, world: &impl Hittable, depth: isize) -> Color {
     if depth <= 0 {
         Color { e: [0.0; 3] }
     } else {
@@ -65,20 +66,24 @@ fn ray_color(r: Ray, world: &impl Hittable, depth: isize) -> Color {
         if (*world).hit(r, 0.001, INFINITY, &mut rec) {
             let mut scattered: Ray = Default::default();
             let mut attenuation: Color = Default::default();
+            let emitted = match rec.clone().mat_ptr {
+                Some(x) => x.emitted(rec.u, rec.v, rec.p),
+                None => Color { e: [0.0; 3] },
+            };
+
             match rec.clone().mat_ptr {
                 Some(x) => {
-                    if x.scatter(r, rec, &mut attenuation, &mut scattered) {
-                        attenuation.mul(ray_color(scattered, world, depth - 1))
+                    if !x.scatter(r, rec, &mut attenuation, &mut scattered) {
+                        emitted
                     } else {
-                        Color { e: [0.0; 3] }
+                        emitted
+                            + attenuation.mul(ray_color(scattered, background, world, depth - 1))
                     }
                 }
                 None => Color { e: [0.0; 3] },
             }
         } else {
-            let unit_dir = unit_vector(r.get_dir());
-            let t = 0.5 * (unit_dir.y() + 1.0);
-            Color { e: [1.0; 3] } * (1.0 - t) + Color { e: [0.5, 0.7, 1.0] } * t
+            background
         }
     }
 }
@@ -238,15 +243,56 @@ fn earth() -> HittableList {
     objects
 }
 
-fn solve(cam: &Camera, world: &HittableList, j: usize) -> (usize, Vec<Color>) {
+fn simple_light() -> HittableList {
+    let mut objects: HittableList = Default::default();
+    let pertext = Arc::new(NoiseTexture::creat(4.0));
+    objects.add(Arc::new(Sphere {
+        center: Point3 {
+            e: [0.0, -1000.0, 0.0],
+        },
+        radius: 1000.0,
+        mat_ptr: Some(Arc::new(Lambertian {
+            albedo: Some(pertext.clone()),
+        })),
+    }));
+
+    objects.add(Arc::new(Sphere {
+        center: Point3 { e: [0.0, 2.0, 0.0] },
+        radius: 2.0,
+        mat_ptr: Some(Arc::new(Lambertian {
+            albedo: Some(pertext),
+        })),
+    }));
+
+    let difflight = Arc::new(DiffuseLight::creat_color(Color { e: [4.0; 3] }));
+
+    objects.add(Arc::new(XyRect {
+        x0: 3.0,
+        x1: 5.0,
+        y0: 1.0,
+        y1: 3.0,
+        k: -2.0,
+        mp: difflight,
+    }));
+
+    objects
+}
+
+fn solve(
+    cam: &Camera,
+    world: &HittableList,
+    j: usize,
+    background: Color,
+    samples_per_pixel: usize,
+) -> (usize, Vec<Color>) {
     let mut ret: Vec<Color> = Default::default();
     for i in 0..WIDTH {
         let mut pixel_color: Color = Color { e: [0.0; 3] };
-        for _ in 0..SAMPLES_PER_PIXEL {
+        for _ in 0..samples_per_pixel {
             let u = (i as f64 + random_double()) / ((WIDTH - 1) as f64);
             let v = (j as f64 + random_double()) / ((HEIGHT - 1) as f64);
             let r: Ray = (*cam).get_ray(u, v);
-            pixel_color += ray_color(r, world, MAXDEPTH);
+            pixel_color += ray_color(r, background, world, MAXDEPTH);
         }
         ret.push(pixel_color);
     }
@@ -259,16 +305,19 @@ fn main() {
     let mut img: RgbImage = ImageBuffer::new(WIDTH as u32, HEIGHT as u32);
 
     //World
+    let mut samples_per_pixel = 100;
     let world: HittableList;
     let lookfrom: Point3;
     let lookat: Point3;
     let vfov;
     let mut aperture = 0.0;
+    let background: Color;
 
     let opt = 0;
     match opt {
         1 => {
             world = random_scene();
+            background = Color { e: [0.7, 0.8, 1.0] };
             lookfrom = Point3 {
                 e: [13.0, 2.0, 3.0],
             };
@@ -278,6 +327,7 @@ fn main() {
         }
         2 => {
             world = two_spheres();
+            background = Color { e: [0.7, 0.8, 1.0] };
             lookfrom = Point3 {
                 e: [13.0, 2.0, 3.0],
             };
@@ -286,6 +336,16 @@ fn main() {
         }
         3 => {
             world = two_perlin_spheres();
+            background = Color { e: [0.7, 0.8, 1.0] };
+            lookfrom = Point3 {
+                e: [13.0, 2.0, 3.0],
+            };
+            lookat = Point3 { e: [0.0; 3] };
+            vfov = 20.0;
+        }
+        4 => {
+            world = earth();
+            background = Color { e: [0.7, 0.8, 1.0] };
             lookfrom = Point3 {
                 e: [13.0, 2.0, 3.0],
             };
@@ -293,11 +353,13 @@ fn main() {
             vfov = 20.0;
         }
         _ => {
-            world = earth();
+            world = simple_light();
+            background = Color { e: [0.0, 0.0, 0.0] };
             lookfrom = Point3 {
-                e: [13.0, 2.0, 3.0],
+                e: [26.0, 3.0, 6.0],
             };
-            lookat = Point3 { e: [0.0; 3] };
+            lookat = Point3 { e: [0.0, 2.0, 0.0] };
+            samples_per_pixel = 400;
             vfov = 20.0;
         }
     }
@@ -328,6 +390,7 @@ fn main() {
         let counter = Arc::clone(&lines);
         let cam_ = cam;
         let world_ = world.clone();
+        let background_ = background;
         let handle = thread::spawn(move || -> Vec<(usize, Vec<Color>)> {
             let mut ret: Vec<(usize, Vec<Color>)> = Default::default();
             loop {
@@ -339,7 +402,7 @@ fn main() {
                 let y = *num;
                 *num += 1;
                 std::mem::drop(num);
-                ret.push(solve(&cam_, &world_, y));
+                ret.push(solve(&cam_, &world_, y, background_, samples_per_pixel));
             }
         });
         handles.push(handle);
@@ -350,7 +413,7 @@ fn main() {
         for obj in color_vec {
             let y = obj.0;
             for x in 0..WIDTH {
-                write_color(obj.1[x], SAMPLES_PER_PIXEL, &mut img, x, y);
+                write_color(obj.1[x], samples_per_pixel, &mut img, x, y);
             }
         }
     }
