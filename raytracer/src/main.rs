@@ -9,6 +9,7 @@ mod aabb;
 mod aarect;
 mod bvh;
 mod camera;
+mod constant_medium;
 mod hittable;
 mod hittable_list;
 mod material;
@@ -22,6 +23,7 @@ mod vec3;
 
 use crate::aarect::{XyRect, XzRect, YzRect};
 use crate::camera::Camera;
+use crate::constant_medium::ConstantMedium;
 use crate::hittable::{HitRecord, Hittable, RotateY, Translate};
 use crate::hittable_list::HittableList;
 use crate::material::Material;
@@ -386,6 +388,116 @@ fn cornell_box() -> HittableList {
     objects
 }
 
+fn cornell_smoke() -> HittableList {
+    let mut objects: HittableList = Default::default();
+
+    let red = Arc::new(Lambertian::creat(Color {
+        e: [0.65, 0.05, 0.05],
+    }));
+    let white = Arc::new(Lambertian::creat(Color {
+        e: [0.73, 0.73, 0.73],
+    }));
+    let green = Arc::new(Lambertian::creat(Color {
+        e: [0.12, 0.45, 0.15],
+    }));
+
+    let light = Arc::new(DiffuseLight::creat_color(Color { e: [7.0; 3] }));
+
+    objects.add(Arc::new(YzRect {
+        y0: 0.0,
+        y1: 555.0,
+        z0: 0.0,
+        z1: 555.0,
+        k: 555.0,
+        mp: green,
+    }));
+
+    objects.add(Arc::new(YzRect {
+        y0: 0.0,
+        y1: 555.0,
+        z0: 0.0,
+        z1: 555.0,
+        k: 0.0,
+        mp: red,
+    }));
+
+    objects.add(Arc::new(XzRect {
+        x0: 113.0,
+        x1: 443.0,
+        z0: 127.0,
+        z1: 432.0,
+        k: 554.0,
+        mp: light,
+    }));
+
+    objects.add(Arc::new(XzRect {
+        x0: 0.0,
+        x1: 555.0,
+        z0: 0.0,
+        z1: 555.0,
+        k: 555.0,
+        mp: white.clone(),
+    }));
+
+    objects.add(Arc::new(XzRect {
+        x0: 0.0,
+        x1: 555.0,
+        z0: 0.0,
+        z1: 555.0,
+        k: 0.0,
+        mp: white.clone(),
+    }));
+
+    objects.add(Arc::new(XyRect {
+        x0: 0.0,
+        x1: 555.0,
+        y0: 0.0,
+        y1: 555.0,
+        k: 555.0,
+        mp: white.clone(),
+    }));
+
+    let box1 = Arc::new(Box::creat(
+        Point3 { e: [0.0; 3] },
+        Point3 {
+            e: [165.0, 330.0, 165.0],
+        },
+        white.clone(),
+    ));
+    let box1 = Arc::new(RotateY::creat(box1, 15.0));
+    let box1 = Arc::new(Translate {
+        ptr: box1,
+        offset: Vec3 {
+            e: [265.0, 0.0, 295.0],
+        },
+    });
+    objects.add(Arc::new(ConstantMedium::creat2(
+        box1,
+        0.01,
+        Color { e: [0.0; 3] },
+    )));
+
+    let box2 = Arc::new(Box::creat(
+        Point3 { e: [0.0; 3] },
+        Point3 { e: [165.0; 3] },
+        white,
+    ));
+    let box2 = Arc::new(RotateY::creat(box2, -18.0));
+    let box2 = Arc::new(Translate {
+        ptr: box2,
+        offset: Vec3 {
+            e: [130.0, 0.0, 65.0],
+        },
+    });
+    objects.add(Arc::new(ConstantMedium::creat2(
+        box2,
+        0.01,
+        Color { e: [1.0; 3] },
+    )));
+
+    objects
+}
+
 fn solve(
     cam: &Camera,
     world: &HittableList,
@@ -472,11 +584,27 @@ fn main() {
             samples_per_pixel = 400;
             vfov = 20.0;
         }
-        _ => {
+        6 => {
             aspect_ratio = 1.0;
             image_width = 600;
             image_height = (image_width as f64 / aspect_ratio) as usize;
             world = cornell_box();
+            background = Color { e: [0.0, 0.0, 0.0] };
+            lookfrom = Point3 {
+                e: [278.0, 278.0, -800.0],
+            };
+            lookat = Point3 {
+                e: [278.0, 278.0, 0.0],
+            };
+            samples_per_pixel = 200;
+            vfov = 40.0;
+        }
+        _ => {
+            world = cornell_smoke();
+            aspect_ratio = 1.0;
+            image_width = 600;
+            image_height = (image_width as f64 / aspect_ratio) as usize;
+
             background = Color { e: [0.0, 0.0, 0.0] };
             lookfrom = Point3 {
                 e: [278.0, 278.0, -800.0],
@@ -513,7 +641,7 @@ fn main() {
     #[allow(clippy::mutex_atomic)]
     let lines = Arc::new(Mutex::new(0));
 
-    for _ in 0..20 {
+    for _ in 0..16 {
         let counter = Arc::clone(&lines);
         let cam_ = cam;
         let world_ = world.clone();
