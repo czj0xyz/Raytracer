@@ -19,7 +19,7 @@ mod sphere;
 mod texture;
 mod vec3;
 
-use crate::aarect::XyRect;
+use crate::aarect::{XyRect, XzRect, YzRect};
 use crate::camera::Camera;
 use crate::hittable::{HitRecord, Hittable};
 use crate::hittable_list::HittableList;
@@ -31,9 +31,6 @@ use crate::sphere::Sphere;
 use crate::texture::{CheckerTexture, ImageTexture, NoiseTexture};
 use crate::vec3::{clamp, random_double, random_double_lr, Color, Point3, Vec3};
 
-const ASPECT_RATIO: f64 = 16.0 / 9.0;
-const WIDTH: usize = 400;
-const HEIGHT: usize = (WIDTH as f64 / ASPECT_RATIO) as usize;
 const QUALITY: u8 = 100;
 const MAXDEPTH: isize = 50;
 
@@ -43,8 +40,9 @@ fn write_color(
     img: &mut RgbImage,
     x: usize,
     y: usize,
+    image_height: usize,
 ) {
-    let pixel = (*img).get_pixel_mut(x as u32, (HEIGHT - y - 1) as u32);
+    let pixel = (*img).get_pixel_mut(x as u32, (image_height - y - 1) as u32);
     let scale = 1.0 / samples_per_pixel as f64;
     let r_color = (pixel_color.x() * scale).sqrt();
     let g_color = (pixel_color.y() * scale).sqrt();
@@ -284,19 +282,93 @@ fn simple_light() -> HittableList {
     objects
 }
 
+fn cornell_box() -> HittableList {
+    let mut objects: HittableList = Default::default();
+
+    let red = Arc::new(Lambertian::creat(Color {
+        e: [0.65, 0.05, 0.05],
+    }));
+    let white = Arc::new(Lambertian::creat(Color {
+        e: [0.73, 0.73, 0.73],
+    }));
+    let green = Arc::new(Lambertian::creat(Color {
+        e: [0.12, 0.45, 0.15],
+    }));
+
+    let light = Arc::new(DiffuseLight::creat_color(Color { e: [15.0; 3] }));
+
+    objects.add(Arc::new(YzRect {
+        y0: 0.0,
+        y1: 555.0,
+        z0: 0.0,
+        z1: 555.0,
+        k: 555.0,
+        mp: green,
+    }));
+
+    objects.add(Arc::new(YzRect {
+        y0: 0.0,
+        y1: 555.0,
+        z0: 0.0,
+        z1: 555.0,
+        k: 0.0,
+        mp: red,
+    }));
+
+    objects.add(Arc::new(XzRect {
+        x0: 213.0,
+        x1: 343.0,
+        z0: 227.0,
+        z1: 332.0,
+        k: 554.0,
+        mp: light,
+    }));
+
+    objects.add(Arc::new(XzRect {
+        x0: 0.0,
+        x1: 555.0,
+        z0: 0.0,
+        z1: 555.0,
+        k: 0.0,
+        mp: white.clone(),
+    }));
+
+    objects.add(Arc::new(XzRect {
+        x0: 0.0,
+        x1: 555.0,
+        z0: 0.0,
+        z1: 555.0,
+        k: 555.0,
+        mp: white.clone(),
+    }));
+
+    objects.add(Arc::new(XyRect {
+        x0: 0.0,
+        x1: 555.0,
+        y0: 0.0,
+        y1: 555.0,
+        k: 555.0,
+        mp: white,
+    }));
+
+    objects
+}
+
 fn solve(
     cam: &Camera,
     world: &HittableList,
     j: usize,
     background: Color,
     samples_per_pixel: usize,
+    image_width: usize,
+    image_height: usize,
 ) -> (usize, Vec<Color>) {
     let mut ret: Vec<Color> = Default::default();
-    for i in 0..WIDTH {
+    for i in 0..image_width {
         let mut pixel_color: Color = Color { e: [0.0; 3] };
         for _ in 0..samples_per_pixel {
-            let u = (i as f64 + random_double()) / ((WIDTH - 1) as f64);
-            let v = (j as f64 + random_double()) / ((HEIGHT - 1) as f64);
+            let u = (i as f64 + random_double()) / ((image_width - 1) as f64);
+            let v = (j as f64 + random_double()) / ((image_height - 1) as f64);
             let r: Ray = (*cam).get_ray(u, v);
             pixel_color += ray_color(r, background, world, MAXDEPTH);
         }
@@ -307,11 +379,11 @@ fn solve(
 
 fn main() {
     // Image
-    let path = "output/output.jpg";
-    let mut img: RgbImage = ImageBuffer::new(WIDTH as u32, HEIGHT as u32);
-
-    //World
+    let mut aspect_ratio = 16.0 / 9.0;
+    let mut image_width: usize = 400;
+    let mut image_height: usize = (image_width as f64 / aspect_ratio) as usize;
     let mut samples_per_pixel = 100;
+    //World
     let world: HittableList;
     let lookfrom: Point3;
     let lookat: Point3;
@@ -358,7 +430,7 @@ fn main() {
             lookat = Point3 { e: [0.0; 3] };
             vfov = 20.0;
         }
-        _ => {
+        5 => {
             world = simple_light();
             background = Color { e: [0.0, 0.0, 0.0] };
             lookfrom = Point3 {
@@ -367,6 +439,21 @@ fn main() {
             lookat = Point3 { e: [0.0, 2.0, 0.0] };
             samples_per_pixel = 400;
             vfov = 20.0;
+        }
+        _ => {
+            aspect_ratio = 1.0;
+            image_width = 600;
+            image_height = (image_width as f64 / aspect_ratio) as usize;
+            world = cornell_box();
+            background = Color { e: [0.0, 0.0, 0.0] };
+            lookfrom = Point3 {
+                e: [278.0, 278.0, -800.0],
+            };
+            lookat = Point3 {
+                e: [278.0, 278.0, 0.0],
+            };
+            samples_per_pixel = 200;
+            vfov = 40.0;
         }
     }
 
@@ -378,12 +465,14 @@ fn main() {
         lookat,
         vup,
         vfov,
-        ASPECT_RATIO,
+        aspect_ratio,
         aperture,
         dist_to_focus,
         0.0,
         1.0,
     );
+    let path = "output/output.jpg";
+    let mut img: RgbImage = ImageBuffer::new(image_width as u32, image_height as u32);
 
     //Render
 
@@ -401,14 +490,22 @@ fn main() {
             let mut ret: Vec<(usize, Vec<Color>)> = Default::default();
             loop {
                 let mut num = counter.lock().unwrap();
-                if (*num) == HEIGHT {
+                if (*num) == image_height {
                     break ret;
                 }
                 eprintln!("Scanlines remaining: {}", *num);
                 let y = *num;
                 *num += 1;
                 std::mem::drop(num);
-                ret.push(solve(&cam_, &world_, y, background_, samples_per_pixel));
+                ret.push(solve(
+                    &cam_,
+                    &world_,
+                    y,
+                    background_,
+                    samples_per_pixel,
+                    image_width,
+                    image_height,
+                ));
             }
         });
         handles.push(handle);
@@ -418,8 +515,8 @@ fn main() {
         let color_vec = handle.join().unwrap();
         for obj in color_vec {
             let y = obj.0;
-            for x in 0..WIDTH {
-                write_color(obj.1[x], samples_per_pixel, &mut img, x, y);
+            for x in 0..image_width {
+                write_color(obj.1[x], samples_per_pixel, &mut img, x, y, image_height);
             }
         }
     }
