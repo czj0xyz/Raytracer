@@ -22,7 +22,7 @@ mod vec3;
 
 use crate::aarect::{XyRect, XzRect, YzRect};
 use crate::camera::Camera;
-use crate::hittable::{HitRecord, Hittable};
+use crate::hittable::{HitRecord, Hittable, RotateY, Translate};
 use crate::hittable_list::HittableList;
 use crate::material::Material;
 use crate::material::{Dielectric, DiffuseLight, Lambertian, Metal};
@@ -353,24 +353,35 @@ fn cornell_box() -> HittableList {
         mp: white.clone(),
     }));
 
-    objects.add(Arc::new(Box::creat(
+    let box1 = Arc::new(Box::creat(
+        Point3 { e: [0.0; 3] },
         Point3 {
-            e: [130.0, 0.0, 65.0],
-        },
-        Point3 {
-            e: [295.0, 165.0, 230.0],
+            e: [165.0, 330.0, 165.0],
         },
         white.clone(),
-    )));
-    objects.add(Arc::new(Box::creat(
-        Point3 {
+    ));
+    let box1 = Arc::new(RotateY::creat(box1, 15.0));
+    let box1 = Arc::new(Translate {
+        ptr: box1,
+        offset: Vec3 {
             e: [265.0, 0.0, 295.0],
         },
-        Point3 {
-            e: [430.0, 330.0, 460.0],
-        },
+    });
+    objects.add(box1);
+
+    let box2 = Arc::new(Box::creat(
+        Point3 { e: [0.0; 3] },
+        Point3 { e: [165.0; 3] },
         white,
-    )));
+    ));
+    let box2 = Arc::new(RotateY::creat(box2, -18.0));
+    let box2 = Arc::new(Translate {
+        ptr: box2,
+        offset: Vec3 {
+            e: [130.0, 0.0, 65.0],
+        },
+    });
+    objects.add(box2);
 
     objects
 }
