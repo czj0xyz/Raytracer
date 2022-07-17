@@ -13,6 +13,7 @@ mod hittable;
 mod hittable_list;
 mod material;
 mod moving_sphere;
+mod mybox;
 mod perlin;
 mod ray;
 mod sphere;
@@ -26,6 +27,7 @@ use crate::hittable_list::HittableList;
 use crate::material::Material;
 use crate::material::{Dielectric, DiffuseLight, Lambertian, Metal};
 use crate::moving_sphere::MovingSphere;
+use crate::mybox::Box;
 use crate::ray::Ray;
 use crate::sphere::Sphere;
 use crate::texture::{CheckerTexture, ImageTexture, NoiseTexture};
@@ -348,8 +350,27 @@ fn cornell_box() -> HittableList {
         y0: 0.0,
         y1: 555.0,
         k: 555.0,
-        mp: white,
+        mp: white.clone(),
     }));
+
+    objects.add(Arc::new(Box::creat(
+        Point3 {
+            e: [130.0, 0.0, 65.0],
+        },
+        Point3 {
+            e: [295.0, 165.0, 230.0],
+        },
+        white.clone(),
+    )));
+    objects.add(Arc::new(Box::creat(
+        Point3 {
+            e: [265.0, 0.0, 295.0],
+        },
+        Point3 {
+            e: [430.0, 330.0, 460.0],
+        },
+        white,
+    )));
 
     objects
 }
