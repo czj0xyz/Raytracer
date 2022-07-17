@@ -22,6 +22,7 @@ mod texture;
 mod vec3;
 
 use crate::aarect::{XyRect, XzRect, YzRect};
+use crate::bvh::BvhNode;
 use crate::camera::Camera;
 use crate::constant_medium::ConstantMedium;
 use crate::hittable::{HitRecord, Hittable, RotateY, Translate};
@@ -498,6 +499,164 @@ fn cornell_smoke() -> HittableList {
     objects
 }
 
+fn final_scene() -> HittableList {
+    let mut boxes1: HittableList = Default::default();
+    let ground = Arc::new(Lambertian::creat(Color {
+        e: [0.48, 0.83, 0.53],
+    }));
+
+    let boxes_per_side = 20;
+    for i in 0..boxes_per_side {
+        for j in 0..boxes_per_side {
+            let w = 100.0;
+            let x0 = -1000.0 + i as f64 * w;
+            let z0 = -1000.0 + j as f64 * w;
+            let y0 = 0.0;
+            let x1 = x0 + w;
+            let y1 = random_double_lr(1.0, 101.0);
+            let z1 = z0 + w;
+
+            boxes1.add(Arc::new(Box::creat(
+                Point3 { e: [x0, y0, z0] },
+                Point3 { e: [x1, y1, z1] },
+                ground.clone(),
+            )));
+        }
+    }
+
+    let mut objects: HittableList = Default::default();
+    objects.add(Arc::new(BvhNode::creat(
+        &boxes1.objects,
+        0,
+        boxes1.objects.len(),
+        0.0,
+        1.0,
+    )));
+
+    let light = Arc::new(DiffuseLight::creat_color(Color { e: [7.0; 3] }));
+    objects.add(Arc::new(XzRect {
+        x0: 123.0,
+        x1: 423.0,
+        z0: 147.0,
+        z1: 412.0,
+        k: 554.0,
+        mp: light,
+    }));
+
+    let center1_ = Point3 {
+        e: [400.0, 400.0, 200.0],
+    };
+    let center2_ = center1_
+        + Vec3 {
+            e: [30.0, 0.0, 0.0],
+        };
+    let moving_sphere_material = Arc::new(Lambertian::creat(Color { e: [0.7, 0.3, 0.1] }));
+    objects.add(Arc::new(MovingSphere {
+        center0: center1_,
+        center1: center2_,
+        time0: 0.0,
+        time1: 1.0,
+        radius: 50.0,
+        mat_ptr: Some(moving_sphere_material),
+    }));
+
+    objects.add(Arc::new(Sphere {
+        center: Point3 {
+            e: [260.0, 150.0, 45.0],
+        },
+        radius: 50.0,
+        mat_ptr: Some(Arc::new(Dielectric { ir: 1.5 })),
+    }));
+    objects.add(Arc::new(Sphere {
+        center: Point3 {
+            e: [0.0, 150.0, 145.0],
+        },
+        radius: 50.0,
+        mat_ptr: Some(Arc::new(Metal::creat(Color { e: [0.8, 0.8, 0.9] }, 1.0))),
+    }));
+
+    let boundary = Arc::new(Sphere {
+        center: Point3 {
+            e: [360.0, 150.0, 145.0],
+        },
+        radius: 70.0,
+        mat_ptr: Some(Arc::new(Dielectric { ir: 1.5 })),
+    });
+    objects.add(boundary.clone());
+    objects.add(Arc::new(ConstantMedium::creat2(
+        boundary,
+        0.2,
+        Color { e: [0.2, 0.4, 0.9] },
+    )));
+
+    let boundary = Arc::new(Sphere {
+        center: Point3 { e: [0.0; 3] },
+        radius: 5000.0,
+        mat_ptr: Some(Arc::new(Dielectric { ir: 1.5 })),
+    });
+    objects.add(Arc::new(ConstantMedium::creat2(
+        boundary,
+        0.0001,
+        Color { e: [1.0; 3] },
+    )));
+
+    let earth_texture = Arc::new(ImageTexture::creat("raytracer/src/picture/earthmap.jpg"));
+    let emt = Arc::new(Lambertian {
+        albedo: Some(earth_texture),
+    });
+    objects.add(Arc::new(Sphere {
+        center: Point3 {
+            e: [400.0, 200.0, 400.0],
+        },
+        radius: 100.0,
+        mat_ptr: Some(emt),
+    }));
+
+    let pertext = Arc::new(NoiseTexture::creat(0.1));
+    objects.add(Arc::new(Sphere {
+        center: Point3 {
+            e: [220.0, 280.0, 300.0],
+        },
+        radius: 80.0,
+        mat_ptr: Some(Arc::new(Lambertian {
+            albedo: Some(pertext),
+        })),
+    }));
+
+    let mut boxes2: HittableList = Default::default();
+    let white = Arc::new(Lambertian::creat(Color {
+        e: [0.73, 0.73, 0.73],
+    }));
+
+    let ns: usize = 1000;
+
+    for _ in 0..ns {
+        boxes2.add(Arc::new(Sphere {
+            center: Vec3::random_lr(0.0, 165.0),
+            radius: 10.0,
+            mat_ptr: Some(white.clone()),
+        }));
+    }
+
+    objects.add(Arc::new(Translate {
+        ptr: Arc::new(RotateY::creat(
+            Arc::new(BvhNode::creat(
+                &boxes2.objects,
+                0,
+                boxes2.objects.len(),
+                0.0,
+                1.0,
+            )),
+            15.0,
+        )),
+        offset: Vec3 {
+            e: [-100.0, 270.0, 395.0],
+        },
+    }));
+
+    objects
+}
+
 fn solve(
     cam: &Camera,
     world: &HittableList,
@@ -599,7 +758,7 @@ fn main() {
             samples_per_pixel = 200;
             vfov = 40.0;
         }
-        _ => {
+        7 => {
             world = cornell_smoke();
             aspect_ratio = 1.0;
             image_width = 600;
@@ -613,6 +772,21 @@ fn main() {
                 e: [278.0, 278.0, 0.0],
             };
             samples_per_pixel = 200;
+            vfov = 40.0;
+        }
+        _ => {
+            world = final_scene();
+            aspect_ratio = 1.0;
+            image_width = 800;
+            image_height = (image_width as f64 / aspect_ratio) as usize;
+            samples_per_pixel = 10000;
+            background = Color { e: [0.0, 0.0, 0.0] };
+            lookfrom = Point3 {
+                e: [478.0, 278.0, -600.0],
+            };
+            lookat = Point3 {
+                e: [278.0, 278.0, 0.0],
+            };
             vfov = 40.0;
         }
     }
@@ -641,7 +815,7 @@ fn main() {
     #[allow(clippy::mutex_atomic)]
     let lines = Arc::new(Mutex::new(0));
 
-    for _ in 0..16 {
+    for _ in 0..32 {
         let counter = Arc::clone(&lines);
         let cam_ = cam;
         let world_ = world.clone();
