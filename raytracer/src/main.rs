@@ -777,9 +777,9 @@ fn main() {
         _ => {
             world = final_scene();
             aspect_ratio = 1.0;
-            image_width = 800;
+            image_width = 600;
             image_height = (image_width as f64 / aspect_ratio) as usize;
-            samples_per_pixel = 10000;
+            samples_per_pixel = 1000;
             background = Color { e: [0.0, 0.0, 0.0] };
             lookfrom = Point3 {
                 e: [478.0, 278.0, -600.0],
@@ -815,7 +815,7 @@ fn main() {
     #[allow(clippy::mutex_atomic)]
     let lines = Arc::new(Mutex::new(0));
 
-    for _ in 0..32 {
+    for _ in 0..16 {
         let counter = Arc::clone(&lines);
         let cam_ = cam;
         let world_ = world.clone();
