@@ -1,4 +1,4 @@
-use crate::vec3::{dot, random_int_lr, unit_vector, Point3, Vec3};
+use crate::basic::vec3::{dot, random_int_lr, unit_vector, Point3, Vec3};
 
 #[derive(Clone)]
 pub struct Perlin {

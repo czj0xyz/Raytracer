@@ -1,5 +1,8 @@
-use crate::perlin::Perlin;
-use crate::vec3::{clamp, Color, Point3};
+use super::perlin::Perlin;
+use crate::basic::{
+    clamp,
+    vec3::{Color, Point3},
+};
 use image::*;
 use std::sync::Arc;
 pub trait Texture: Send + Sync {

@@ -1,75 +1,12 @@
-use crate::aabb::Aabb;
-use crate::material::Material;
-use crate::ray::Ray;
-use crate::vec3::{dot, fmax, fmin, Point3, Vec3};
-use std::f64::consts::PI;
+use super::{HitRecord, Hittable};
+use crate::basic::{
+    ray::Ray,
+    vec3::{Point3, Vec3},
+    {degrees_to_radians, fmax, fmin},
+};
+use crate::bvh::aabb::Aabb;
 use std::f64::INFINITY;
 use std::sync::Arc;
-
-fn degrees_to_radians(degrees: f64) -> f64 {
-    degrees * PI / 180.0
-}
-
-#[derive(Default, Clone)]
-pub struct HitRecord {
-    pub p: Point3,
-    pub normal: Vec3,
-    pub t: f64,
-    pub u: f64,
-    pub v: f64,
-    pub front_face: bool,
-    pub mat_ptr: Option<Arc<dyn Material>>,
-}
-
-impl HitRecord {
-    pub fn set_face_normal(&mut self, r: Ray, outward_normal: Vec3) {
-        (*self).front_face = dot(r.get_dir(), outward_normal) < 0.0;
-        (*self).normal = if (*self).front_face {
-            outward_normal
-        } else {
-            Vec3 { e: [0.0; 3] } - outward_normal
-        };
-    }
-}
-
-pub trait Hittable: Send + Sync {
-    fn hit(&self, r: Ray, t_min: f64, t_max: f64, rec: &mut HitRecord) -> bool;
-    fn bounding_box(&self, t0: f64, t1: f64, output_box: &mut Aabb) -> bool;
-}
-
-#[derive(Clone)]
-pub struct Translate {
-    pub ptr: Arc<dyn Hittable>,
-    pub offset: Vec3,
-}
-
-impl Hittable for Translate {
-    fn hit(&self, r: Ray, t_min: f64, t_max: f64, rec: &mut HitRecord) -> bool {
-        let moved_r = Ray {
-            st: r.get_start() - (*self).offset,
-            dir: r.get_dir(),
-            tm: r.get_time(),
-        };
-        if !(*self).ptr.hit(moved_r, t_min, t_max, rec) {
-            false
-        } else {
-            rec.p += (*self).offset;
-            rec.set_face_normal(moved_r, rec.normal);
-            true
-        }
-    }
-    fn bounding_box(&self, t0: f64, t1: f64, output_box: &mut Aabb) -> bool {
-        if !(*self).ptr.bounding_box(t0, t1, output_box) {
-            false
-        } else {
-            *output_box = Aabb {
-                min: output_box.min() + (*self).offset,
-                max: output_box.max() + (*self).offset,
-            };
-            true
-        }
-    }
-}
 
 #[derive(Clone)]
 pub struct RotateY {

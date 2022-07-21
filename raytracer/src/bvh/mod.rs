@@ -1,7 +1,9 @@
-use crate::aabb::{surrounding_box, Aabb};
+pub mod aabb;
+
+use crate::basic::{ray::Ray, vec3::random_int_lr};
 use crate::hittable::{HitRecord, Hittable};
-use crate::ray::Ray;
-use crate::vec3::random_int_lr;
+use aabb::{surrounding_box, Aabb};
+
 use std::cmp::Ordering;
 use std::process::exit;
 use std::sync::Arc;

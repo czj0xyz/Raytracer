@@ -1,11 +1,14 @@
-use crate::aabb::Aabb;
-use crate::hittable::{HitRecord, Hittable};
-use crate::material::{Isotropic, Material};
-use crate::ray::Ray;
-use crate::texture::Texture;
-use crate::vec3::{random_double, Color, Vec3};
 use std::f64::INFINITY;
 use std::sync::Arc;
+
+use super::{HitRecord, Hittable};
+use crate::basic::{
+    ray::Ray,
+    vec3::{random_double, Color, Vec3},
+};
+use crate::bvh::aabb::Aabb;
+use crate::material::{Isotropic, Material};
+use crate::texture::Texture;
 
 #[derive(Clone)]
 pub struct ConstantMedium {

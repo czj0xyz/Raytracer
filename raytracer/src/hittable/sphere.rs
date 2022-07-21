@@ -1,31 +1,32 @@
-use crate::aabb::{surrounding_box, Aabb};
+use crate::basic::{
+    ray::Ray,
+    vec3::{dot, Point3},
+};
+use crate::bvh::aabb::Aabb;
 use crate::hittable::{HitRecord, Hittable};
 use crate::material::Material;
-use crate::ray::Ray;
-use crate::vec3::{dot, Point3};
+use std::f64::consts::PI;
 use std::sync::Arc;
 
 #[derive(Default, Clone)]
-pub struct MovingSphere {
-    pub center0: Point3,
-    pub center1: Point3,
-    pub time0: f64,
-    pub time1: f64,
+pub struct Sphere {
+    pub center: Point3,
     pub radius: f64,
     pub mat_ptr: Option<Arc<dyn Material>>,
 }
 
-impl MovingSphere {
-    pub fn center(&self, time: f64) -> Point3 {
-        (*self).center0
-            + ((*self).center1 - (*self).center0) * (time - (*self).time0)
-                / ((*self).time1 - (*self).time0)
+impl Sphere {
+    pub fn get_sphere_uv(p: Point3, u: &mut f64, v: &mut f64) {
+        let theta = (-p.y()).acos();
+        let phi = (-p.z()).atan2(p.x()) + PI;
+        *u = phi / (2.0 * PI);
+        *v = theta / PI;
     }
 }
 
-impl Hittable for MovingSphere {
+impl Hittable for Sphere {
     fn hit(&self, r: Ray, t_min: f64, t_max: f64, rec: &mut HitRecord) -> bool {
-        let oc = r.get_start() - (*self).center(r.get_time());
+        let oc = r.get_start() - (*self).center;
         let a = r.get_dir().length_squared();
         let half_b = dot(oc, r.get_dir());
         let c = oc.length_squared() - (*self).radius * (*self).radius;
@@ -44,36 +45,24 @@ impl Hittable for MovingSphere {
             }
             rec.t = root;
             rec.p = r.at(rec.t);
-            let outward_normal = (rec.p - (*self).center(r.get_time())) / (*self).radius;
+            let outward_normal = (rec.p - (*self).center) / (*self).radius;
             rec.set_face_normal(r, outward_normal);
+            Sphere::get_sphere_uv(outward_normal, &mut rec.u, &mut rec.v);
             rec.mat_ptr = (*self).mat_ptr.clone();
         }
         ret
     }
-    fn bounding_box(&self, t0: f64, t1: f64, output_box: &mut Aabb) -> bool {
-        let box0 = Aabb {
-            min: (*self).center(t0)
+    fn bounding_box(&self, _t0: f64, _t1: f64, output_box: &mut Aabb) -> bool {
+        *output_box = Aabb {
+            min: (*self).center
                 - Point3 {
                     e: [(*self).radius; 3],
                 },
-            max: (*self).center(t0)
+            max: (*self).center
                 + Point3 {
                     e: [(*self).radius; 3],
                 },
         };
-
-        let box1 = Aabb {
-            min: (*self).center(t1)
-                - Point3 {
-                    e: [(*self).radius; 3],
-                },
-            max: (*self).center(t1)
-                + Point3 {
-                    e: [(*self).radius; 3],
-                },
-        };
-
-        *output_box = surrounding_box(box0, box1);
         true
     }
 }

@@ -1,5 +1,8 @@
-use crate::ray::Ray;
-use crate::vec3::*;
+use crate::basic::{
+    ray::Ray,
+    vec3::*,
+    {fmax, fmin},
+};
 
 #[derive(Default, Clone, Copy)]
 pub struct Aabb {

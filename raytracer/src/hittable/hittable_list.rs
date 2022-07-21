@@ -1,7 +1,8 @@
-use crate::aabb::{surrounding_box, Aabb};
-use crate::hittable::{HitRecord, Hittable};
-use crate::ray::Ray;
 use std::sync::Arc;
+
+use super::{HitRecord, Hittable};
+use crate::basic::ray::Ray;
+use crate::bvh::aabb::{surrounding_box, Aabb};
 
 #[derive(Default, Clone)]
 pub struct HittableList {

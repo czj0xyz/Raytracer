@@ -5,36 +5,33 @@ use std::sync::{Arc, Mutex};
 use std::thread;
 use std::{fs::File, process::exit};
 
-mod aabb;
-mod aarect;
-mod bvh;
-mod camera;
-mod constant_medium;
-mod hittable;
-mod hittable_list;
-mod material;
-mod moving_sphere;
-mod mybox;
-mod perlin;
-mod ray;
-mod sphere;
-mod texture;
-mod vec3;
+pub mod basic;
+pub mod bvh;
+pub mod hittable;
+pub mod material;
+pub mod texture;
 
-use crate::aarect::{XyRect, XzRect, YzRect};
-use crate::bvh::BvhNode;
-use crate::camera::Camera;
-use crate::constant_medium::ConstantMedium;
-use crate::hittable::{HitRecord, Hittable, RotateY, Translate};
-use crate::hittable_list::HittableList;
-use crate::material::Material;
-use crate::material::{Dielectric, DiffuseLight, Lambertian, Metal};
-use crate::moving_sphere::MovingSphere;
-use crate::mybox::Box;
-use crate::ray::Ray;
-use crate::sphere::Sphere;
-use crate::texture::{CheckerTexture, ImageTexture, NoiseTexture};
-use crate::vec3::{clamp, random_double, random_double_lr, Color, Point3, Vec3};
+use basic::{
+    camera::Camera,
+    clamp,
+    ray::Ray,
+    vec3::{random_double, random_double_lr, Color, Point3, Vec3},
+};
+use bvh::BvhNode;
+use hittable::{
+    aarect::{XyRect, XzRect, YzRect},
+    constant_medium::ConstantMedium,
+    hittable_list::HittableList,
+    moving_sphere::MovingSphere,
+    mybox::Box,
+    rotate_y::RotateY,
+    sphere::Sphere,
+    translate::Translate,
+    {HitRecord, Hittable},
+};
+use material::{Dielectric, DiffuseLight, Lambertian, Material, Metal};
+
+use texture::{CheckerTexture, ImageTexture, NoiseTexture};
 
 const QUALITY: u8 = 100;
 const MAXDEPTH: isize = 50;
@@ -525,13 +522,13 @@ fn final_scene() -> HittableList {
     }
 
     let mut objects: HittableList = Default::default();
-    objects.add(Arc::new(BvhNode::creat(
-        &boxes1.objects,
-        0,
-        boxes1.objects.len(),
-        0.0,
-        1.0,
-    )));
+    // objects.add(Arc::new(BvhNode::creat(
+    //     &boxes1.objects,
+    //     0,
+    //     boxes1.objects.len(),
+    //     0.0,
+    //     1.0,
+    // )));
 
     let light = Arc::new(DiffuseLight::creat_color(Color { e: [7.0; 3] }));
     objects.add(Arc::new(XzRect {
@@ -638,21 +635,21 @@ fn final_scene() -> HittableList {
         }));
     }
 
-    // objects.add(Arc::new(Translate {
-    //     ptr: Arc::new(RotateY::creat(
-    //         Arc::new(BvhNode::creat(
-    //             &boxes2.objects,
-    //             0,
-    //             boxes2.objects.len(),
-    //             0.0,
-    //             1.0,
-    //         )),
-    //         15.0,
-    //     )),
-    //     offset: Vec3 {
-    //         e: [-100.0, 270.0, 395.0],
-    //     },
-    // }));
+    objects.add(Arc::new(Translate {
+        ptr: Arc::new(RotateY::creat(
+            Arc::new(BvhNode::creat(
+                &boxes2.objects,
+                0,
+                boxes2.objects.len(),
+                0.0,
+                1.0,
+            )),
+            15.0,
+        )),
+        offset: Vec3 {
+            e: [-100.0, 270.0, 395.0],
+        },
+    }));
 
     objects
 }
@@ -777,9 +774,9 @@ fn main() {
         _ => {
             world = final_scene();
             aspect_ratio = 1.0;
-            image_width = 600;
+            image_width = 300;
             image_height = (image_width as f64 / aspect_ratio) as usize;
-            samples_per_pixel = 2000;
+            samples_per_pixel = 500;
             background = Color { e: [0.0, 0.0, 0.0] };
             lookfrom = Point3 {
                 e: [478.0, 278.0, -600.0],
@@ -790,7 +787,6 @@ fn main() {
             vfov = 40.0;
         }
     }
-
     //Camera
     let vup = Vec3 { e: [0.0, 1.0, 0.0] };
     let dist_to_focus = 10.0;

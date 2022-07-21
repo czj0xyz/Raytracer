@@ -1,5 +1,5 @@
-use crate::ray::Ray;
-use crate::vec3::{cross, random_double_lr, random_in_unit_disk, unit_vector, Point3, Vec3};
+use super::ray::Ray;
+use super::vec3::{cross, random_double_lr, random_in_unit_disk, unit_vector, Point3, Vec3};
 use std::f64::consts::PI;
 
 fn degrees_to_radians(degrees: f64) -> f64 {

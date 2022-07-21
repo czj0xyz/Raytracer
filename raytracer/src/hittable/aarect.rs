@@ -1,9 +1,12 @@
-use crate::aabb::Aabb;
 use crate::hittable::{HitRecord, Hittable};
-use crate::material::Material;
-use crate::ray::Ray;
-use crate::vec3::{Point3, Vec3};
 use std::sync::Arc;
+
+use crate::basic::{
+    ray::Ray,
+    vec3::{Point3, Vec3},
+};
+use crate::bvh::aabb::Aabb;
+use crate::material::Material;
 
 #[derive(Clone)]
 pub struct XyRect {

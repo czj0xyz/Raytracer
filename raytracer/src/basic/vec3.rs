@@ -1,3 +1,4 @@
+use super::fmin;
 use rand::prelude::*;
 use std::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Sub, SubAssign};
 
@@ -199,15 +200,6 @@ pub fn random_unit_vector() -> Vec3 {
     unit_vector(random_in_unit_sphere())
 }
 
-// pub fn random_in_hemisphere(normal: Vec3) -> Vec3 {
-//     let in_unit_sphere = random_in_unit_sphere();
-//     if dot(in_unit_sphere, normal) > 0.0 {
-//         in_unit_sphere
-//     } else {
-//         Vec3 { e: [0.0; 3] } - in_unit_sphere
-//     }
-// }
-
 pub fn random_in_unit_disk() -> Vec3 {
     loop {
         let p = Vec3 {
@@ -231,36 +223,11 @@ pub fn reflect(v: Vec3, n: Vec3) -> Vec3 {
     v - n * (2.0 * dot(v, n))
 }
 
-pub fn fmin(a: f64, b: f64) -> f64 {
-    if a < b {
-        a
-    } else {
-        b
-    }
-}
-pub fn fmax(a: f64, b: f64) -> f64 {
-    if a < b {
-        b
-    } else {
-        a
-    }
-}
-
 pub fn refract(uv: Vec3, n: Vec3, etai_over_etat: f64) -> Vec3 {
     let cos_theta = fmin(dot(Vec3 { e: [0.0; 3] } - uv, n), 1.0);
     let r_out_perp = (uv + n * cos_theta) * etai_over_etat;
     let r_out_parallel = n * (-(((1.0 - r_out_perp.length_squared()).abs()).sqrt()));
     r_out_perp + r_out_parallel
-}
-
-pub fn clamp(value: f64, min: f64, max: f64) -> f64 {
-    if value < min {
-        min
-    } else if value > max {
-        max
-    } else {
-        value
-    }
 }
 
 pub type Color = Vec3;

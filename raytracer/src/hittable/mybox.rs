@@ -1,10 +1,9 @@
-use crate::aabb::Aabb;
-use crate::aarect::{XyRect, XzRect, YzRect};
+use super::aarect::{XyRect, XzRect, YzRect};
+use super::hittable_list::HittableList;
+use crate::basic::{ray::Ray, vec3::Point3};
+use crate::bvh::aabb::Aabb;
 use crate::hittable::{HitRecord, Hittable};
-use crate::hittable_list::HittableList;
 use crate::material::Material;
-use crate::ray::Ray;
-use crate::vec3::Point3;
 use std::sync::Arc;
 
 pub struct Box {
