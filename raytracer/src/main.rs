@@ -638,21 +638,21 @@ fn final_scene() -> HittableList {
         }));
     }
 
-    objects.add(Arc::new(Translate {
-        ptr: Arc::new(RotateY::creat(
-            Arc::new(BvhNode::creat(
-                &boxes2.objects,
-                0,
-                boxes2.objects.len(),
-                0.0,
-                1.0,
-            )),
-            15.0,
-        )),
-        offset: Vec3 {
-            e: [-100.0, 270.0, 395.0],
-        },
-    }));
+    // objects.add(Arc::new(Translate {
+    //     ptr: Arc::new(RotateY::creat(
+    //         Arc::new(BvhNode::creat(
+    //             &boxes2.objects,
+    //             0,
+    //             boxes2.objects.len(),
+    //             0.0,
+    //             1.0,
+    //         )),
+    //         15.0,
+    //     )),
+    //     offset: Vec3 {
+    //         e: [-100.0, 270.0, 395.0],
+    //     },
+    // }));
 
     objects
 }
@@ -779,7 +779,7 @@ fn main() {
             aspect_ratio = 1.0;
             image_width = 600;
             image_height = (image_width as f64 / aspect_ratio) as usize;
-            samples_per_pixel = 1000;
+            samples_per_pixel = 2000;
             background = Color { e: [0.0, 0.0, 0.0] };
             lookfrom = Point3 {
                 e: [478.0, 278.0, -600.0],
