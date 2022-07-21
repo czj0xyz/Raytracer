@@ -31,17 +31,16 @@ impl Hittable for MovingSphere {
         let a = r.get_dir().length_squared();
         let half_b = dot(oc, r.get_dir());
         let c = oc.length_squared() - (*self).radius * (*self).radius;
-        let mut ret = true;
         let discriminant = half_b.powi(2) - a * c;
         if discriminant < 0.0 {
-            ret = false;
+            return false
         } else {
             let sqrtd = discriminant.sqrt();
             let mut root = (-half_b - sqrtd) / a;
             if root < t_min || t_max < root {
                 root = (-half_b + sqrtd) / a;
                 if root < t_min || t_max < root {
-                    ret = false;
+                    return false
                 }
             }
             rec.t = root;
@@ -50,7 +49,7 @@ impl Hittable for MovingSphere {
             rec.set_face_normal(r, outward_normal);
             rec.mat_ptr = (*self).mat_ptr.clone();
         }
-        ret
+        true
     }
     fn bounding_box(&self, t0: f64, t1: f64, output_box: &mut Aabb) -> bool {
         let box0 = Aabb {

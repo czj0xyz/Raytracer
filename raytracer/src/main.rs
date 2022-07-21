@@ -522,13 +522,13 @@ fn final_scene() -> HittableList {
     }
 
     let mut objects: HittableList = Default::default();
-    // objects.add(Arc::new(BvhNode::creat(
-    //     &boxes1.objects,
-    //     0,
-    //     boxes1.objects.len(),
-    //     0.0,
-    //     1.0,
-    // )));
+    objects.add(Arc::new(BvhNode::creat(
+        &boxes1.objects,
+        0,
+        boxes1.objects.len(),
+        0.0,
+        1.0,
+    )));
 
     let light = Arc::new(DiffuseLight::creat_color(Color { e: [7.0; 3] }));
     objects.add(Arc::new(XzRect {
@@ -774,9 +774,9 @@ fn main() {
         _ => {
             world = final_scene();
             aspect_ratio = 1.0;
-            image_width = 300;
+            image_width = 200;
             image_height = (image_width as f64 / aspect_ratio) as usize;
-            samples_per_pixel = 500;
+            samples_per_pixel = 4000;
             background = Color { e: [0.0, 0.0, 0.0] };
             lookfrom = Point3 {
                 e: [478.0, 278.0, -600.0],

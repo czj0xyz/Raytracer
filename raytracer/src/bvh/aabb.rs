@@ -17,10 +17,9 @@ impl Aabb {
     }
     #[allow(dead_code)]
     pub fn min(&self) -> Point3 {
-        (*self).max
+        (*self).min
     }
     pub fn hit(&self, r: Ray, t_min: f64, t_max: f64) -> bool {
-        let mut ret: bool = true;
         for i in 0..3 {
             let invd = 1.0 / r.get_dir().e[i];
             let mut t0 = ((*self).min.e[i] - r.get_start().e[i]) * invd;
@@ -29,11 +28,11 @@ impl Aabb {
                 std::mem::swap(&mut t0, &mut t1);
             }
 
-            if fmin(t1, t_max) < fmax(t0, t_min) {
-                ret = false;
+            if fmin(t1, t_max) <= fmax(t0, t_min) {
+                return false
             }
         }
-        ret
+        true
     }
 }
 

@@ -40,10 +40,9 @@ impl Hittable for HittableList {
         } else {
             let mut temp_box: Aabb = Default::default();
             let mut first = true;
-            let mut ret = true;
             for obj in &(*self).objects {
-                if obj.bounding_box(t0, t1, &mut temp_box) {
-                    ret = false;
+                if !obj.bounding_box(t0, t1, &mut temp_box) {
+                    return false
                 }
                 *output_box = if first {
                     temp_box
@@ -52,7 +51,7 @@ impl Hittable for HittableList {
                 };
                 first = false;
             }
-            ret
+            true
         }
     }
 }
