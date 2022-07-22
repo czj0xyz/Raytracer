@@ -1,27 +1,28 @@
 use super::{HitRecord, Hittable};
 use crate::basic::{ray::Ray, vec3::Vec3};
 use crate::bvh::aabb::Aabb;
-use std::sync::Arc;
 
 #[derive(Clone)]
-pub struct Translate {
-    pub ptr: Arc<dyn Hittable>,
+pub struct Translate<T:Hittable> {
+    pub ptr: T,//Hittable
     pub offset: Vec3,
 }
 
-impl Hittable for Translate {
-    fn hit(&self, r: Ray, t_min: f64, t_max: f64, rec: &mut HitRecord) -> bool {
+impl<T:Hittable> Hittable for Translate<T> {
+    fn hit(&self, r: Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
         let moved_r = Ray {
             st: r.get_start() - (*self).offset,
             dir: r.get_dir(),
             tm: r.get_time(),
         };
-        if !(*self).ptr.hit(moved_r, t_min, t_max, rec) {
-            false
+        let rec = (*self).ptr.hit(moved_r, t_min, t_max);
+        if rec.is_none() {
+            None
         } else {
+            let mut rec = rec.unwrap();
             rec.p += (*self).offset;
             rec.set_face_normal(moved_r, rec.normal);
-            true
+            Some(rec)
         }
     }
     fn bounding_box(&self, t0: f64, t1: f64, output_box: &mut Aabb) -> bool {

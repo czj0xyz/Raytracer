@@ -6,7 +6,6 @@ use crate::basic::{
 };
 use image::*;
 use perlin::Perlin;
-use std::sync::Arc;
 pub trait Texture: Send + Sync {
     fn value(&self, u: f64, v: f64, p: Point3) -> Color;
 }
@@ -23,21 +22,21 @@ impl Texture for SolidColor {
 }
 
 #[derive(Clone)]
-pub struct CheckerTexture {
-    pub odd: Arc<dyn Texture>,
-    pub even: Arc<dyn Texture>,
+pub struct CheckerTexture<T:Texture,U:Texture> {
+    pub odd: T,
+    pub even: U,
 }
 
-impl CheckerTexture {
-    pub fn creat(a: Color, b: Color) -> CheckerTexture {
+impl<T:Texture,U:Texture> CheckerTexture<T,U> {
+    pub fn creat(a: Color, b: Color) -> CheckerTexture<SolidColor,SolidColor> {
         CheckerTexture {
-            odd: Arc::new(SolidColor { color_value: b }),
-            even: Arc::new(SolidColor { color_value: a }),
+            odd: SolidColor { color_value: b },
+            even: SolidColor { color_value: a },
         }
     }
 }
 
-impl Texture for CheckerTexture {
+impl<T:Texture,U:Texture> Texture for CheckerTexture<T,U> {
     fn value(&self, u: f64, v: f64, p: Point3) -> Color {
         let sines = (10.0 * p.x()).sin() * (10.0 * p.y()).sin() * (10.0 * p.z()).sin();
         if sines < 0.0 {
@@ -112,7 +111,6 @@ impl Texture for ImageTexture {
         let color_scale = 1.0 / 255.0;
 
         let pixel = (*self).data.get_pixel(i as u32, j as u32);
-
         Color {
             e: [
                 pixel.0[0] as f64 * color_scale,

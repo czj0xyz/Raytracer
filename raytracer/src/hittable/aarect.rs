@@ -1,5 +1,4 @@
 use crate::hittable::{HitRecord, Hittable};
-use std::sync::Arc;
 
 use crate::basic::{
     ray::Ray,
@@ -9,34 +8,31 @@ use crate::bvh::aabb::Aabb;
 use crate::material::Material;
 
 #[derive(Clone)]
-pub struct XyRect {
+pub struct XyRect<T:Material>{
     pub x0: f64,
     pub x1: f64,
     pub y0: f64,
     pub y1: f64,
     pub k: f64,
-    pub mp: Arc<dyn Material>,
+    pub mp: T,
 }
 
-impl Hittable for XyRect {
-    fn hit(&self, r: Ray, t_min: f64, t_max: f64, rec: &mut HitRecord) -> bool {
+impl<T:Material> Hittable for XyRect<T> {
+    fn hit(&self, r: Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
         let t = ((*self).k - r.get_start().z()) / r.get_dir().z();
         if t < t_min || t > t_max {
-            false
+            None
         } else {
             let x = r.get_start().x() + t * r.get_dir().x();
             let y = r.get_start().y() + t * r.get_dir().y();
             if x < (*self).x0 || x > (*self).x1 || y < (*self).y0 || y > (*self).y1 {
-                false
+                None
             } else {
-                rec.u = (x - (*self).x0) / ((*self).x1 - (*self).x0);
-                rec.v = (y - (*self).y0) / ((*self).y1 - (*self).y0);
-                rec.t = t;
+                let u = (x - (*self).x0) / ((*self).x1 - (*self).x0);
+                let v = (y - (*self).y0) / ((*self).y1 - (*self).y0);
                 let outward_normal = Vec3 { e: [0.0, 0.0, 1.0] };
-                rec.set_face_normal(r, outward_normal);
-                rec.mat_ptr = Some((*self).mp.clone());
-                rec.p = r.at(t);
-                true
+                let rec = HitRecord::creat(u,v,t,outward_normal,r,r.at(t),&(*self).mp);
+                Some(rec)
             }
         }
     }
@@ -54,34 +50,31 @@ impl Hittable for XyRect {
 }
 
 #[derive(Clone)]
-pub struct XzRect {
+pub struct XzRect<T> {
     pub x0: f64,
     pub x1: f64,
     pub z0: f64,
     pub z1: f64,
     pub k: f64,
-    pub mp: Arc<dyn Material>,
+    pub mp: T,
 }
 
-impl Hittable for XzRect {
-    fn hit(&self, r: Ray, t_min: f64, t_max: f64, rec: &mut HitRecord) -> bool {
+impl<T:Material> Hittable for XzRect<T>{
+    fn hit(&self, r: Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
         let t = ((*self).k - r.get_start().y()) / r.get_dir().y();
         if t < t_min || t > t_max {
-            false
+            None
         } else {
             let x = r.get_start().x() + t * r.get_dir().x();
             let z = r.get_start().z() + t * r.get_dir().z();
             if x < (*self).x0 || x > (*self).x1 || z < (*self).z0 || z > (*self).z1 {
-                false
+                None
             } else {
-                rec.u = (x - (*self).x0) / ((*self).x1 - (*self).x0);
-                rec.v = (z - (*self).z0) / ((*self).z1 - (*self).z0);
-                rec.t = t;
+                let u = (x - (*self).x0) / ((*self).x1 - (*self).x0);
+                let v = (z - (*self).z0) / ((*self).z1 - (*self).z0);
                 let outward_normal = Vec3 { e: [0.0, 1.0, 0.0] };
-                rec.set_face_normal(r, outward_normal);
-                rec.mat_ptr = Some((*self).mp.clone());
-                rec.p = r.at(t);
-                true
+                let rec = HitRecord::creat(u,v,t,outward_normal,r,r.at(t),&(*self).mp);
+                Some(rec)
             }
         }
     }
@@ -99,34 +92,31 @@ impl Hittable for XzRect {
 }
 
 #[derive(Clone)]
-pub struct YzRect {
+pub struct YzRect<T> {
     pub y0: f64,
     pub y1: f64,
     pub z0: f64,
     pub z1: f64,
     pub k: f64,
-    pub mp: Arc<dyn Material>,
+    pub mp: T,
 }
 
-impl Hittable for YzRect {
-    fn hit(&self, r: Ray, t_min: f64, t_max: f64, rec: &mut HitRecord) -> bool {
+impl<T:Material> Hittable for YzRect<T> {
+    fn hit(&self, r: Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
         let t = ((*self).k - r.get_start().x()) / r.get_dir().x();
         if t < t_min || t > t_max {
-            false
+            None
         } else {
             let y = r.get_start().y() + t * r.get_dir().y();
             let z = r.get_start().z() + t * r.get_dir().z();
             if z < (*self).z0 || z > (*self).z1 || y < (*self).y0 || y > (*self).y1 {
-                false
+                None
             } else {
-                rec.u = (y - (*self).y0) / ((*self).y1 - (*self).y0);
-                rec.v = (z - (*self).z0) / ((*self).z1 - (*self).z0);
-                rec.t = t;
+                let u = (y - (*self).y0) / ((*self).y1 - (*self).y0);
+                let v = (z - (*self).z0) / ((*self).z1 - (*self).z0);
                 let outward_normal = Vec3 { e: [1.0, 0.0, 0.0] };
-                rec.set_face_normal(r, outward_normal);
-                rec.mat_ptr = Some((*self).mp.clone());
-                rec.p = r.at(t);
-                true
+                let rec = HitRecord::creat(u,v,t,outward_normal,r,r.at(t),&(*self).mp);
+                Some(rec)
             }
         }
     }

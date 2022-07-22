@@ -6,19 +6,18 @@ use crate::basic::{
 };
 use crate::bvh::aabb::Aabb;
 use std::f64::INFINITY;
-use std::sync::Arc;
 
 #[derive(Clone)]
-pub struct RotateY {
-    pub ptr: Arc<dyn Hittable>,
+pub struct RotateY<T:Hittable>{
+    pub ptr: T,//Hittable
     pub sin_theta: f64,
     pub cos_theta: f64,
     pub hasbox: bool,
     pub bbox: Aabb,
 }
 
-impl RotateY {
-    pub fn creat(p: Arc<dyn Hittable>, angle: f64) -> RotateY {
+impl<T:Hittable> RotateY<T> {
+    pub fn creat(p: T, angle: f64) -> RotateY<T> {
         let radians = degrees_to_radians(angle);
         let sin_theta_ = radians.sin();
         let cos_theta_ = radians.cos();
@@ -62,8 +61,8 @@ impl RotateY {
     }
 }
 
-impl Hittable for RotateY {
-    fn hit(&self, r: Ray, t_min: f64, t_max: f64, rec: &mut HitRecord) -> bool {
+impl<T:Hittable> Hittable for RotateY<T> {
+    fn hit(&self, r: Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
         let mut origin = r.get_start();
         let mut dir_ = r.get_dir();
 
@@ -80,10 +79,11 @@ impl Hittable for RotateY {
             dir: dir_,
             tm: r.get_time(),
         };
-
-        if !(*self).ptr.hit(rotate_r, t_min, t_max, rec) {
-            false
+        let tmp=(*self).ptr.hit(rotate_r, t_min, t_max);
+        if tmp.is_none() {
+            None
         } else {
+            let mut rec = tmp.unwrap();
             let mut p = rec.p;
             let mut normal = rec.normal;
             p.e[0] = (*self).cos_theta * rec.p.e[0] + (*self).sin_theta * rec.p.e[2];
@@ -95,7 +95,7 @@ impl Hittable for RotateY {
             rec.p = p;
             rec.set_face_normal(rotate_r, normal);
 
-            true
+            Some(rec)
         }
     }
     fn bounding_box(&self, _t0: f64, _t1: f64, output_box: &mut Aabb) -> bool {

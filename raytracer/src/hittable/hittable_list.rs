@@ -1,12 +1,9 @@
-use std::sync::Arc;
-
 use super::{HitRecord, Hittable};
 use crate::basic::ray::Ray;
 use crate::bvh::aabb::{surrounding_box, Aabb};
-
-#[derive(Default, Clone)]
+#[derive(Default)]
 pub struct HittableList {
-    pub objects: Vec<Arc<dyn Hittable>>,
+    pub objects: Vec<Box<dyn Hittable>>,
 }
 
 impl HittableList {
@@ -14,24 +11,24 @@ impl HittableList {
     //     self.objects.clear();
     // }
 
-    pub fn add(&mut self, obj: Arc<dyn Hittable>) {
+    pub fn add(&mut self, obj: Box<dyn Hittable>) {
         (*self).objects.push(obj);
     }
 }
 
 impl Hittable for HittableList {
-    fn hit(&self, r: Ray, t_min: f64, t_max: f64, rec: &mut HitRecord) -> bool {
-        let mut hit_anything = false;
+    fn hit(&self, r: Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
         let mut closest_so_far = t_max;
-        let mut temp_rec: HitRecord = Default::default();
+        let mut ret : Option<HitRecord>  = Default::default();
         for object in &(*self).objects {
-            if object.hit(r, t_min, closest_so_far, &mut temp_rec) {
-                hit_anything = true;
-                closest_so_far = (temp_rec.clone()).t;
-                *rec = temp_rec.clone();
+            let rec = object.hit(r, t_min, closest_so_far);
+            if rec.is_some() {
+                let tmp = rec.unwrap();
+                closest_so_far = tmp.t;
+                ret=Some(tmp);
             }
         }
-        hit_anything
+        ret
     }
 
     fn bounding_box(&self, t0: f64, t1: f64, output_box: &mut Aabb) -> bool {

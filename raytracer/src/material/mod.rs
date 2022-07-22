@@ -10,8 +10,6 @@ use crate::basic::{
     },
 };
 
-use std::sync::Arc;
-
 pub trait Material: Send + Sync {
     fn scatter(
         &self,
@@ -27,8 +25,8 @@ pub trait Material: Send + Sync {
 }
 
 #[derive(Default, Clone)]
-pub struct Lambertian {
-    pub albedo: Option<Arc<dyn Texture>>,
+pub struct Lambertian<T:Texture> {
+    pub albedo: T,
 }
 
 #[derive(Default, Copy, Clone, Debug)]
@@ -37,15 +35,15 @@ pub struct Metal {
     pub fuzz: f64,
 }
 
-impl Lambertian {
-    pub fn creat(c: Color) -> Lambertian {
+impl Lambertian<SolidColor> {
+    pub fn creat(c: Color) -> Lambertian<SolidColor> {
         Lambertian {
-            albedo: Some(Arc::new(SolidColor { color_value: c })),
+            albedo: SolidColor { color_value: c },
         }
     }
 }
 
-impl Material for Lambertian {
+impl<T:Texture> Material for Lambertian<T> {
     fn scatter(
         &self,
         _r_in: Ray,
@@ -62,10 +60,7 @@ impl Material for Lambertian {
             dir: scatter_direction,
             tm: _r_in.get_time(),
         };
-        *attenuation = match (*self).albedo.clone() {
-            Some(x) => x.value(rec.u, rec.v, rec.p),
-            None => Color { e: [0.0; 3] },
-        };
+        *attenuation =  (*self).albedo.value(rec.u,rec.v,rec.p);
         true
     }
 }
@@ -89,6 +84,7 @@ impl Material for Metal {
     }
 }
 
+#[derive(Default, Clone)]
 pub struct Dielectric {
     pub ir: f64,
 }
@@ -148,23 +144,26 @@ impl Dielectric {
 }
 
 #[derive(Clone)]
-pub struct DiffuseLight {
-    emit: Arc<dyn Texture>,
+pub struct DiffuseLight<T:Texture> {
+    emit: T,
 }
 
-impl DiffuseLight {
-    pub fn creat_color(c: Color) -> DiffuseLight {
+impl DiffuseLight<SolidColor> {
+    pub fn creat_color(c: Color) -> DiffuseLight<SolidColor> {
         DiffuseLight {
-            emit: Arc::new(SolidColor { color_value: c }),
+            emit: SolidColor { color_value: c },
         }
     }
+}
+
+impl<T:Texture> DiffuseLight<T> {
     #[allow(dead_code)]
-    pub fn creat_ptr(c: Arc<dyn Texture>) -> DiffuseLight {
+    pub fn creat_ptr(c: T) -> DiffuseLight<T> {
         DiffuseLight { emit: c }
     }
 }
 
-impl Material for DiffuseLight {
+impl<T:Texture> Material for DiffuseLight<T> {
     fn scatter(
         &self,
         _r_in: Ray,
@@ -180,19 +179,19 @@ impl Material for DiffuseLight {
     }
 }
 
-pub struct Isotropic {
-    pub albedo: Arc<dyn Texture>,
+pub struct Isotropic<T:Texture> {
+    pub albedo: T,
 }
 
-impl Isotropic {
-    pub fn creat(c: Color) -> Isotropic {
+impl<T:Texture> Isotropic<T> {
+    pub fn creat(c: Color) -> Isotropic<SolidColor> {
         Isotropic {
-            albedo: Arc::new(SolidColor { color_value: c }),
+            albedo: SolidColor { color_value: c },
         }
     }
 }
 
-impl Material for Isotropic {
+impl<T:Texture> Material for Isotropic<T> {
     fn scatter(
         &self,
         r_in: Ray,
