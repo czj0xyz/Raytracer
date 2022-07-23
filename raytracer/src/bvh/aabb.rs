@@ -20,6 +20,8 @@ impl Aabb {
         (*self).min
     }
     pub fn hit(&self, r: Ray, t_min: f64, t_max: f64) -> bool {
+        let mut t_min = t_min;
+        let mut t_max = t_max;
         for i in 0..3 {
             let invd = 1.0 / r.get_dir().e[i];
             let mut t0 = ((*self).min.e[i] - r.get_start().e[i]) * invd;
@@ -27,11 +29,13 @@ impl Aabb {
             if invd < 0.0 {
                 std::mem::swap(&mut t0, &mut t1);
             }
-
-            if fmin(t1, t_max) <= fmax(t0, t_min) {
+            t_min = fmax(t0,t_min);
+            t_max = fmin(t1,t_max);
+            if t_max <= t_min {
                 return false
             }
         }
+        // eprintln!("POL");
         true
     }
 }

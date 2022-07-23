@@ -4,6 +4,8 @@ use std::f64::INFINITY;
 use std::sync::{Arc, Mutex};
 use std::thread;
 use std::{fs::File, process::exit};
+use rand::prelude::*;
+
 
 pub mod basic;
 pub mod bvh;
@@ -15,7 +17,7 @@ use basic::{
     camera::Camera,
     clamp,
     ray::Ray,
-    vec3::{random_double, random_double_lr, Color, Point3, Vec3},
+    vec3::{random_double, Color, Point3, Vec3},
 };
 use bvh::BvhNode;
 use hittable::{
@@ -79,6 +81,7 @@ fn ray_color(r: Ray, background: Color, world: &impl Hittable, depth: isize) -> 
 }
 
 fn final_scene() -> HittableList {
+    let mut rng = StdRng::seed_from_u64(19260817);
     let mut boxes1: HittableList = Default::default();
     let ground = Lambertian::creat(Color {
         e: [0.48, 0.83, 0.53],
@@ -92,7 +95,7 @@ fn final_scene() -> HittableList {
             let z0 = -1000.0 + j as f64 * w;
             let y0 = 0.0;
             let x1 = x0 + w;
-            let y1 = random_double_lr(1.0, 101.0);
+            let y1 = 100.0*rng.gen::<f64>()+1.0; //random_double_lr(1.0, 101.0);
             let z1 = z0 + w;
 
             boxes1.add(Box::new(MyBox::creat(
@@ -208,8 +211,9 @@ fn final_scene() -> HittableList {
     let ns: usize = 1000;
 
     for _ in 0..ns {
+        
         boxes2.add(Box::new(Sphere {
-            center: Vec3::random_lr(0.0, 165.0),
+            center: Vec3{e:[165.0*rng.gen::<f64>(),165.0*rng.gen::<f64>(),165.0*rng.gen::<f64>()]},//Vec3::random_lr(0.0,165.0)
             radius: 10.0,
             mat_ptr: white.clone(),
         }));
@@ -257,114 +261,32 @@ fn solve(
 
 fn main() {
     // Image
-    let mut aspect_ratio = 16.0 / 9.0;
-    let mut image_width: usize = 400;
-    let mut image_height: usize = (image_width as f64 / aspect_ratio) as usize;
-    let mut samples_per_pixel = 100;
+    let  aspect_ratio;// = 16.0 / 9.0;
+    let  image_width;//: usize = 400;
+    let  image_height;//: usize = (image_width as f64 / aspect_ratio) as usize;
+    let  samples_per_pixel;// = 100;
     //World
-    let world: HittableList;
+    // let world: HittableList;
     let lookfrom: Point3;
     let lookat: Point3;
     let vfov;
-    let mut aperture = 0.0;
+    let aperture = 0.0;
     let background: Color;
 
-    // let opt = 0;
-    // match opt {
-        // 1 => {
-        //     world = random_scene();
-        //     background = Color { e: [0.7, 0.8, 1.0] };
-        //     lookfrom = Point3 {
-        //         e: [13.0, 2.0, 3.0],
-        //     };
-        //     lookat = Point3 { e: [0.0; 3] };
-        //     vfov = 20.0;
-        //     aperture = 0.1;
-        // }
-        // 2 => {
-        //     world = two_spheres();
-        //     background = Color { e: [0.7, 0.8, 1.0] };
-        //     lookfrom = Point3 {
-        //         e: [13.0, 2.0, 3.0],
-        //     };
-        //     lookat = Point3 { e: [0.0; 3] };
-        //     vfov = 20.0;
-        // }
-        // 3 => {
-        //     world = two_perlin_spheres();
-        //     background = Color { e: [0.7, 0.8, 1.0] };
-        //     lookfrom = Point3 {
-        //         e: [13.0, 2.0, 3.0],
-        //     };
-        //     lookat = Point3 { e: [0.0; 3] };
-        //     vfov = 20.0;
-        // }
-        // 4 => {
-        //     world = earth();
-        //     background = Color { e: [0.7, 0.8, 1.0] };
-        //     lookfrom = Point3 {
-        //         e: [13.0, 2.0, 3.0],
-        //     };
-        //     lookat = Point3 { e: [0.0; 3] };
-        //     vfov = 20.0;
-        // }
-        // 5 => {
-        //     world = simple_light();
-        //     background = Color { e: [0.0, 0.0, 0.0] };
-        //     lookfrom = Point3 {
-        //         e: [26.0, 3.0, 6.0],
-        //     };
-        //     lookat = Point3 { e: [0.0, 2.0, 0.0] };
-        //     samples_per_pixel = 400;
-        //     vfov = 20.0;
-        // }
-        // 6 => {
-        //     aspect_ratio = 1.0;
-        //     image_width = 600;
-        //     image_height = (image_width as f64 / aspect_ratio) as usize;
-        //     world = cornell_box();
-        //     background = Color { e: [0.0, 0.0, 0.0] };
-        //     lookfrom = Point3 {
-        //         e: [278.0, 278.0, -800.0],
-        //     };
-        //     lookat = Point3 {
-        //         e: [278.0, 278.0, 0.0],
-        //     };
-        //     samples_per_pixel = 200;
-        //     vfov = 40.0;
-        // }
-        // 7 => {
-        //     world = cornell_smoke();
-        //     aspect_ratio = 1.0;
-        //     image_width = 600;
-        //     image_height = (image_width as f64 / aspect_ratio) as usize;
+    // world = final_scene();
+    aspect_ratio = 1.0;
+    image_width = 800;
+    image_height = (image_width as f64 / aspect_ratio) as usize;
+    samples_per_pixel = 1000;
+    background = Color { e: [0.0, 0.0, 0.0] };
+    lookfrom = Point3 {
+        e: [478.0, 278.0, -600.0],
+    };
+    lookat = Point3 {
+        e: [278.0, 278.0, 0.0],
+    };
+    vfov = 40.0;
 
-        //     background = Color { e: [0.0, 0.0, 0.0] };
-        //     lookfrom = Point3 {
-        //         e: [278.0, 278.0, -800.0],
-        //     };
-        //     lookat = Point3 {
-        //         e: [278.0, 278.0, 0.0],
-        //     };
-        //     samples_per_pixel = 200;
-        //     vfov = 40.0;
-        // }
-        // _ => {
-            world = final_scene();
-            aspect_ratio = 1.0;
-            image_width = 300;
-            image_height = (image_width as f64 / aspect_ratio) as usize;
-            samples_per_pixel = 5000;
-            background = Color { e: [0.0, 0.0, 0.0] };
-            lookfrom = Point3 {
-                e: [478.0, 278.0, -600.0],
-            };
-            lookat = Point3 {
-                e: [278.0, 278.0, 0.0],
-            };
-            vfov = 40.0;
-    //     }
-    // }
     //Camera
     let vup = Vec3 { e: [0.0, 1.0, 0.0] };
     let dist_to_focus = 10.0;

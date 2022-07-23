@@ -2,9 +2,10 @@ use super::fmin;
 use rand::prelude::*;
 use std::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Sub, SubAssign};
 
+
+
 pub fn random_double() -> f64 {
-    let mut rng = rand::thread_rng();
-    rng.gen()
+    rand::thread_rng().gen::<f64>()
 }
 
 pub fn random_double_lr(min: f64, max: f64) -> f64 {

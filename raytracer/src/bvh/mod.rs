@@ -15,7 +15,8 @@ pub struct BvhNode {
 }
 impl Hittable for BvhNode {
     fn hit(&self, r: Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
-        if (*self).box_.hit(r, t_min, t_max) {
+        if !(*self).box_.hit(r, t_min, t_max) {
+            // eprintln!("OK");
             None
         } else {
             let hit_left = if (*self).left.is_some(){
@@ -23,7 +24,10 @@ impl Hittable for BvhNode {
             }else {None};
 
             let hit_right = if (*self).right.is_some(){
-                (*self).right.as_ref().unwrap().hit(r, t_min, t_max)
+                (*self).right.as_ref().unwrap().hit(r, t_min, 
+                    if hit_left.is_some() {hit_left.as_ref().unwrap().t}
+                        else {t_max}
+                )
             }else {None};
             
             if hit_right.is_some() {hit_right}
@@ -120,11 +124,13 @@ impl BvhNode {
             Some(x) => x.bounding_box(t0, t1, &mut box_right),
             None => false,
         };
-        // if !fl || !fr {
-        //     eprintln!("No bounding box in bvh_node constructor.");
-        //     exit(0);
-        // }
-        ret.box_ = surrounding_box(box_left, box_right);
+        if !fl && !fr {
+            eprintln!("No bounding box in bvh_node constructor.");
+            exit(0);
+        }
+        ret.box_ = if !fl {surrounding_box(box_right,box_right)}
+                else if !fr {surrounding_box(box_left,box_left)}
+                else {surrounding_box(box_left,box_right)};
         ret
     }
 }
