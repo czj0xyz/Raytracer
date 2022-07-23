@@ -266,7 +266,7 @@ fn main() {
     aspect_ratio = 1.0;
     image_width = 800;
     image_height = (image_width as f64 / aspect_ratio) as usize;
-    samples_per_pixel = 10000;
+    samples_per_pixel = 8000;
     background = Color { e: [0.0, 0.0, 0.0] };
     lookfrom = Point3 {
         e: [478.0, 278.0, -600.0],
