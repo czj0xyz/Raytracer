@@ -11,8 +11,8 @@ pub struct MyBox {
     pub sides: HittableList,
 }
 
-impl MyBox{
-    pub fn creat<T:Material + Clone + 'static>(p0: Point3, p1: Point3, ptr: T) -> MyBox {
+impl MyBox {
+    pub fn creat<T: Material + Clone + 'static>(p0: Point3, p1: Point3, ptr: T) -> MyBox {
         let box_min_ = p0;
         let box_max_ = p1;
         let mut ret: HittableList = Default::default();
@@ -65,7 +65,7 @@ impl MyBox{
             z0: p0.z(),
             z1: p1.z(),
             k: p0.x(),
-            mp: ptr.clone(),
+            mp: ptr,
         }));
 
         MyBox {

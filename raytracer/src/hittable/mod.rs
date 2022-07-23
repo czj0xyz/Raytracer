@@ -34,14 +34,27 @@ impl<'a> HitRecord<'a> {
             Vec3 { e: [0.0; 3] } - outward_normal
         };
     }
-    pub fn creat(u:f64,v:f64,t:f64,outward_normal:Vec3,r:Ray,p:Point3,mat_ptr:&'a dyn Material) -> HitRecord<'a>{
-        let mut ret = HitRecord{
-            p:p,t:t,u:u,v:v,
-            normal: Vec3{e:[0.0;3]},
+    #[allow(clippy::redundant_field_names)]
+    #[allow(clippy::many_single_char_names)]
+    pub fn creat(
+        u: f64,
+        v: f64,
+        t: f64,
+        outward_normal: Vec3,
+        r: Ray,
+        p: Point3,
+        mat_ptr: &'a dyn Material,
+    ) -> HitRecord<'a> {
+        let mut ret = HitRecord {
+            p: p,
+            t: t,
+            u: u,
+            v: v,
+            normal: Vec3 { e: [0.0; 3] },
             front_face: false,
             mat_ptr: mat_ptr,
         };
-        ret.set_face_normal(r,outward_normal);
+        ret.set_face_normal(r, outward_normal);
         ret
     }
 }

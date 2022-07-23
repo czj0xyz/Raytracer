@@ -7,7 +7,7 @@ use crate::hittable::{HitRecord, Hittable};
 use crate::material::Material;
 
 #[derive(Clone)]
-pub struct MovingSphere<T:Material> {
+pub struct MovingSphere<T: Material> {
     pub center0: Point3,
     pub center1: Point3,
     pub time0: f64,
@@ -16,7 +16,7 @@ pub struct MovingSphere<T:Material> {
     pub mat_ptr: T,
 }
 
-impl<T:Material> MovingSphere<T> {
+impl<T: Material> MovingSphere<T> {
     pub fn center(&self, time: f64) -> Point3 {
         (*self).center0
             + ((*self).center1 - (*self).center0) * (time - (*self).time0)
@@ -24,7 +24,7 @@ impl<T:Material> MovingSphere<T> {
     }
 }
 
-impl<T:Material> Hittable for MovingSphere<T> {
+impl<T: Material> Hittable for MovingSphere<T> {
     fn hit(&self, r: Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
         let oc = r.get_start() - (*self).center(r.get_time());
         let a = r.get_dir().length_squared();
@@ -39,11 +39,18 @@ impl<T:Material> Hittable for MovingSphere<T> {
             if root < t_min || t_max < root {
                 root = (-half_b + sqrtd) / a;
                 if root < t_min || t_max < root {
-                    return None
+                    return None;
                 }
             }
-            let rec = HitRecord::creat(0.0,0.0,root,
-            (r.at(root) - (*self).center(r.get_time())) / (*self).radius,r,r.at(root),& (*self).mat_ptr);
+            let rec = HitRecord::creat(
+                0.0,
+                0.0,
+                root,
+                (r.at(root) - (*self).center(r.get_time())) / (*self).radius,
+                r,
+                r.at(root),
+                &(*self).mat_ptr,
+            );
             Some(rec)
         }
     }

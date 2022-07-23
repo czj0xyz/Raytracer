@@ -19,20 +19,33 @@ impl Hittable for BvhNode {
             // eprintln!("OK");
             None
         } else {
-            let hit_left = if (*self).left.is_some(){
+            let hit_left = if (*self).left.is_some() {
                 (*self).left.as_ref().unwrap().hit(r, t_min, t_max)
-            }else {None};
+            } else {
+                None
+            };
 
-            let hit_right = if (*self).right.is_some(){
-                (*self).right.as_ref().unwrap().hit(r, t_min, 
-                    if hit_left.is_some() {hit_left.as_ref().unwrap().t}
-                        else {t_max}
+            let hit_right = if (*self).right.is_some() {
+                (*self).right.as_ref().unwrap().hit(
+                    r,
+                    t_min,
+                    if hit_left.is_some() {
+                        hit_left.as_ref().unwrap().t
+                    } else {
+                        t_max
+                    },
                 )
-            }else {None};
-            
-            if hit_right.is_some() {hit_right}
-            else if hit_left.is_some() {hit_left}
-            else {None}
+            } else {
+                None
+            };
+
+            if hit_right.is_some() {
+                hit_right
+            } else if hit_left.is_some() {
+                hit_left
+            } else {
+                None
+            }
         }
     }
     fn bounding_box(&self, _t0: f64, _t1: f64, output_box: &mut Aabb) -> bool {
@@ -41,7 +54,7 @@ impl Hittable for BvhNode {
     }
 }
 
-fn box_compare(a: &Box<dyn Hittable>, b: &Box<dyn Hittable>, axis: usize) -> bool {
+fn box_compare(a: &dyn Hittable, b: &dyn Hittable, axis: usize) -> bool {
     let mut box_a: Aabb = Default::default();
     let mut box_b: Aabb = Default::default();
     if !a.bounding_box(0.0, 0.0, &mut box_a) || !b.bounding_box(0.0, 0.0, &mut box_b) {
@@ -51,26 +64,22 @@ fn box_compare(a: &Box<dyn Hittable>, b: &Box<dyn Hittable>, axis: usize) -> boo
     box_a.min().e[axis] < box_b.min().e[axis]
 }
 #[allow(dead_code)]
-fn box_x_compare(a: &Box<dyn Hittable>, b: &Box<dyn Hittable>) -> bool {
+fn box_x_compare(a: &dyn Hittable, b: &dyn Hittable) -> bool {
     box_compare(a, b, 0)
 }
 #[allow(dead_code)]
-fn box_y_compare(a: &Box<dyn Hittable>, b: &Box<dyn Hittable>) -> bool {
+fn box_y_compare(a: &dyn Hittable, b: &dyn Hittable) -> bool {
     box_compare(a, b, 1)
 }
 #[allow(dead_code)]
-fn box_z_compare(a: &Box<dyn Hittable>, b: &Box<dyn Hittable>) -> bool {
+fn box_z_compare(a: &dyn Hittable, b: &dyn Hittable) -> bool {
     box_compare(a, b, 2)
 }
 
 impl BvhNode {
     #[allow(dead_code)]
     #[allow(clippy::ptr_arg)]
-    pub fn creat(
-        src_objects: Vec<Box<dyn Hittable>>,
-        t0: f64,
-        t1: f64,
-    ) -> BvhNode {
+    pub fn creat(src_objects: Vec<Box<dyn Hittable>>, t0: f64, t1: f64) -> BvhNode {
         let mut objects = src_objects;
         let axis = random_int_lr(0, 2);
         let cmp = if axis == 0 {
@@ -89,7 +98,7 @@ impl BvhNode {
         } else if object_span == 2 {
             let b = objects.pop().unwrap();
             let a = objects.pop().unwrap();
-            if cmp(&a, &b) {
+            if cmp(&(*a), &(*b)) {
                 ret.left = Some(a);
                 ret.right = Some(b);
             } else {
@@ -99,15 +108,15 @@ impl BvhNode {
         } else {
             //sort()
             objects.sort_by(|a, b| -> Ordering {
-                if cmp(a, b) {
+                if cmp(&(**a), &(**b)) {
                     Ordering::Less
-                } else if cmp(b, a) {
+                } else if cmp(&(**b), &(**a)) {
                     Ordering::Greater
                 } else {
                     Ordering::Equal
                 }
             });
-            let mid = object_span>>1;
+            let mid = object_span >> 1;
             let mut left_vec = objects;
             let right_vec = left_vec.split_off(mid);
 
@@ -128,9 +137,13 @@ impl BvhNode {
             eprintln!("No bounding box in bvh_node constructor.");
             exit(0);
         }
-        ret.box_ = if !fl {surrounding_box(box_right,box_right)}
-                else if !fr {surrounding_box(box_left,box_left)}
-                else {surrounding_box(box_left,box_right)};
+        ret.box_ = if !fl {
+            surrounding_box(box_right, box_right)
+        } else if !fr {
+            surrounding_box(box_left, box_left)
+        } else {
+            surrounding_box(box_left, box_right)
+        };
         ret
     }
 }

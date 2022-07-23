@@ -29,10 +29,10 @@ impl Aabb {
             if invd < 0.0 {
                 std::mem::swap(&mut t0, &mut t1);
             }
-            t_min = fmax(t0,t_min);
-            t_max = fmin(t1,t_max);
+            t_min = fmax(t0, t_min);
+            t_max = fmin(t1, t_max);
             if t_max <= t_min {
-                return false
+                return false;
             }
         }
         // eprintln!("POL");

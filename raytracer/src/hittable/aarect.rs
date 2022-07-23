@@ -8,7 +8,7 @@ use crate::bvh::aabb::Aabb;
 use crate::material::Material;
 
 #[derive(Clone)]
-pub struct XyRect<T:Material>{
+pub struct XyRect<T: Material> {
     pub x0: f64,
     pub x1: f64,
     pub y0: f64,
@@ -16,8 +16,8 @@ pub struct XyRect<T:Material>{
     pub k: f64,
     pub mp: T,
 }
-
-impl<T:Material> Hittable for XyRect<T> {
+#[allow(clippy::many_single_char_names)]
+impl<T: Material> Hittable for XyRect<T> {
     fn hit(&self, r: Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
         let t = ((*self).k - r.get_start().z()) / r.get_dir().z();
         if t < t_min || t > t_max {
@@ -31,7 +31,7 @@ impl<T:Material> Hittable for XyRect<T> {
                 let u = (x - (*self).x0) / ((*self).x1 - (*self).x0);
                 let v = (y - (*self).y0) / ((*self).y1 - (*self).y0);
                 let outward_normal = Vec3 { e: [0.0, 0.0, 1.0] };
-                let rec = HitRecord::creat(u,v,t,outward_normal,r,r.at(t),&(*self).mp);
+                let rec = HitRecord::creat(u, v, t, outward_normal, r, r.at(t), &(*self).mp);
                 Some(rec)
             }
         }
@@ -59,7 +59,8 @@ pub struct XzRect<T> {
     pub mp: T,
 }
 
-impl<T:Material> Hittable for XzRect<T>{
+#[allow(clippy::many_single_char_names)]
+impl<T: Material> Hittable for XzRect<T> {
     fn hit(&self, r: Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
         let t = ((*self).k - r.get_start().y()) / r.get_dir().y();
         if t < t_min || t > t_max {
@@ -73,7 +74,7 @@ impl<T:Material> Hittable for XzRect<T>{
                 let u = (x - (*self).x0) / ((*self).x1 - (*self).x0);
                 let v = (z - (*self).z0) / ((*self).z1 - (*self).z0);
                 let outward_normal = Vec3 { e: [0.0, 1.0, 0.0] };
-                let rec = HitRecord::creat(u,v,t,outward_normal,r,r.at(t),&(*self).mp);
+                let rec = HitRecord::creat(u, v, t, outward_normal, r, r.at(t), &(*self).mp);
                 Some(rec)
             }
         }
@@ -101,7 +102,8 @@ pub struct YzRect<T> {
     pub mp: T,
 }
 
-impl<T:Material> Hittable for YzRect<T> {
+#[allow(clippy::many_single_char_names)]
+impl<T: Material> Hittable for YzRect<T> {
     fn hit(&self, r: Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
         let t = ((*self).k - r.get_start().x()) / r.get_dir().x();
         if t < t_min || t > t_max {
@@ -115,7 +117,7 @@ impl<T:Material> Hittable for YzRect<T> {
                 let u = (y - (*self).y0) / ((*self).y1 - (*self).y0);
                 let v = (z - (*self).z0) / ((*self).z1 - (*self).z0);
                 let outward_normal = Vec3 { e: [1.0, 0.0, 0.0] };
-                let rec = HitRecord::creat(u,v,t,outward_normal,r,r.at(t),&(*self).mp);
+                let rec = HitRecord::creat(u, v, t, outward_normal, r, r.at(t), &(*self).mp);
                 Some(rec)
             }
         }

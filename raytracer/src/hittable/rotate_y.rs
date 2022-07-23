@@ -8,15 +8,15 @@ use crate::bvh::aabb::Aabb;
 use std::f64::INFINITY;
 
 #[derive(Clone)]
-pub struct RotateY<T:Hittable>{
-    pub ptr: T,//Hittable
+pub struct RotateY<T: Hittable> {
+    pub ptr: T, //Hittable
     pub sin_theta: f64,
     pub cos_theta: f64,
     pub hasbox: bool,
     pub bbox: Aabb,
 }
 
-impl<T:Hittable> RotateY<T> {
+impl<T: Hittable> RotateY<T> {
     pub fn creat(p: T, angle: f64) -> RotateY<T> {
         let radians = degrees_to_radians(angle);
         let sin_theta_ = radians.sin();
@@ -60,8 +60,8 @@ impl<T:Hittable> RotateY<T> {
         }
     }
 }
-
-impl<T:Hittable> Hittable for RotateY<T> {
+#[allow(clippy::unnecessary_unwrap)]
+impl<T: Hittable> Hittable for RotateY<T> {
     fn hit(&self, r: Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
         let mut origin = r.get_start();
         let mut dir_ = r.get_dir();
@@ -79,7 +79,7 @@ impl<T:Hittable> Hittable for RotateY<T> {
             dir: dir_,
             tm: r.get_time(),
         };
-        let tmp=(*self).ptr.hit(rotate_r, t_min, t_max);
+        let tmp = (*self).ptr.hit(rotate_r, t_min, t_max);
         if tmp.is_none() {
             None
         } else {

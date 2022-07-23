@@ -3,12 +3,12 @@ use crate::basic::{ray::Ray, vec3::Vec3};
 use crate::bvh::aabb::Aabb;
 
 #[derive(Clone)]
-pub struct Translate<T:Hittable> {
-    pub ptr: T,//Hittable
+pub struct Translate<T: Hittable> {
+    pub ptr: T, //Hittable
     pub offset: Vec3,
 }
-
-impl<T:Hittable> Hittable for Translate<T> {
+#[allow(clippy::unnecessary_unwrap)]
+impl<T: Hittable> Hittable for Translate<T> {
     fn hit(&self, r: Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
         let moved_r = Ray {
             st: r.get_start() - (*self).offset,

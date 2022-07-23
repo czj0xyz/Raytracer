@@ -25,7 +25,7 @@ pub trait Material: Send + Sync {
 }
 
 #[derive(Default, Clone)]
-pub struct Lambertian<T:Texture> {
+pub struct Lambertian<T: Texture> {
     pub albedo: T,
 }
 
@@ -43,7 +43,7 @@ impl Lambertian<SolidColor> {
     }
 }
 
-impl<T:Texture> Material for Lambertian<T> {
+impl<T: Texture> Material for Lambertian<T> {
     fn scatter(
         &self,
         _r_in: Ray,
@@ -60,7 +60,7 @@ impl<T:Texture> Material for Lambertian<T> {
             dir: scatter_direction,
             tm: _r_in.get_time(),
         };
-        *attenuation =  (*self).albedo.value(rec.u,rec.v,rec.p);
+        *attenuation = (*self).albedo.value(rec.u, rec.v, rec.p);
         true
     }
 }
@@ -144,7 +144,7 @@ impl Dielectric {
 }
 
 #[derive(Clone)]
-pub struct DiffuseLight<T:Texture> {
+pub struct DiffuseLight<T: Texture> {
     emit: T,
 }
 
@@ -156,14 +156,14 @@ impl DiffuseLight<SolidColor> {
     }
 }
 
-impl<T:Texture> DiffuseLight<T> {
+impl<T: Texture> DiffuseLight<T> {
     #[allow(dead_code)]
     pub fn creat_ptr(c: T) -> DiffuseLight<T> {
         DiffuseLight { emit: c }
     }
 }
 
-impl<T:Texture> Material for DiffuseLight<T> {
+impl<T: Texture> Material for DiffuseLight<T> {
     fn scatter(
         &self,
         _r_in: Ray,
@@ -179,11 +179,11 @@ impl<T:Texture> Material for DiffuseLight<T> {
     }
 }
 
-pub struct Isotropic<T:Texture> {
+pub struct Isotropic<T: Texture> {
     pub albedo: T,
 }
 
-impl<T:Texture> Isotropic<T> {
+impl<T: Texture> Isotropic<T> {
     pub fn creat(c: Color) -> Isotropic<SolidColor> {
         Isotropic {
             albedo: SolidColor { color_value: c },
@@ -191,7 +191,7 @@ impl<T:Texture> Isotropic<T> {
     }
 }
 
-impl<T:Texture> Material for Isotropic<T> {
+impl<T: Texture> Material for Isotropic<T> {
     fn scatter(
         &self,
         r_in: Ray,

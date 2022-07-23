@@ -2,8 +2,6 @@ use super::fmin;
 use rand::prelude::*;
 use std::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Sub, SubAssign};
 
-
-
 pub fn random_double() -> f64 {
     rand::thread_rng().gen::<f64>()
 }

@@ -1,11 +1,10 @@
 use console::style;
 use image::{ImageBuffer, RgbImage};
+use rand::prelude::*;
 use std::f64::INFINITY;
 use std::sync::{Arc, Mutex};
 use std::thread;
 use std::{fs::File, process::exit};
-use rand::prelude::*;
-
 
 pub mod basic;
 pub mod bvh;
@@ -21,15 +20,9 @@ use basic::{
 };
 use bvh::BvhNode;
 use hittable::{
-    aarect::{XzRect},
-    hittable_list::HittableList,
-    moving_sphere::MovingSphere,
-    mybox::MyBox,
-    rotate_y::RotateY,
-    sphere::Sphere,
-    translate::Translate,
-    constant_medium::ConstantMedium,
-    {Hittable},
+    aarect::XzRect, constant_medium::ConstantMedium, hittable_list::HittableList,
+    moving_sphere::MovingSphere, mybox::MyBox, rotate_y::RotateY, sphere::Sphere,
+    translate::Translate, Hittable,
 };
 use material::{Dielectric, DiffuseLight, Lambertian, Metal};
 
@@ -59,7 +52,7 @@ fn write_color(
     *pixel = image::Rgb(res);
 }
 //Image
-
+#[allow(clippy::unnecessary_unwrap)]
 fn ray_color(r: Ray, background: Color, world: &impl Hittable, depth: isize) -> Color {
     if depth <= 0 {
         Color { e: [0.0; 3] }
@@ -69,10 +62,14 @@ fn ray_color(r: Ray, background: Color, world: &impl Hittable, depth: isize) -> 
             let rec = rec.unwrap();
             let mut scattered: Ray = Default::default();
             let mut attenuation: Color = Default::default();
-            let emitted = rec.mat_ptr.emitted(rec.u,rec.v,rec.p);
-            if !rec.mat_ptr.scatter(r,rec,&mut attenuation,&mut scattered) {emitted}
-            else{
-                emitted + attenuation.mul( ray_color(scattered,background,world,depth-1) )
+            let emitted = rec.mat_ptr.emitted(rec.u, rec.v, rec.p);
+            if !rec
+                .mat_ptr
+                .scatter(r, rec, &mut attenuation, &mut scattered)
+            {
+                emitted
+            } else {
+                emitted + attenuation.mul(ray_color(scattered, background, world, depth - 1))
             }
         } else {
             background
@@ -95,7 +92,7 @@ fn final_scene() -> HittableList {
             let z0 = -1000.0 + j as f64 * w;
             let y0 = 0.0;
             let x1 = x0 + w;
-            let y1 = 100.0*rng.gen::<f64>()+1.0; //random_double_lr(1.0, 101.0);
+            let y1 = 100.0 * rng.gen::<f64>() + 1.0; //random_double_lr(1.0, 101.0);
             let z1 = z0 + w;
 
             boxes1.add(Box::new(MyBox::creat(
@@ -107,11 +104,7 @@ fn final_scene() -> HittableList {
     }
 
     let mut objects: HittableList = Default::default();
-    objects.add(Box::new(BvhNode::creat(
-        boxes1.objects,
-        0.0,
-        1.0,
-    )));
+    objects.add(Box::new(BvhNode::creat(boxes1.objects, 0.0, 1.0)));
 
     let light = DiffuseLight::creat_color(Color { e: [7.0; 3] });
     objects.add(Box::new(XzRect {
@@ -198,9 +191,7 @@ fn final_scene() -> HittableList {
             e: [220.0, 280.0, 300.0],
         },
         radius: 80.0,
-        mat_ptr: Lambertian {
-            albedo: pertext,
-        },
+        mat_ptr: Lambertian { albedo: pertext },
     }));
 
     let mut boxes2: HittableList = Default::default();
@@ -211,23 +202,21 @@ fn final_scene() -> HittableList {
     let ns: usize = 1000;
 
     for _ in 0..ns {
-        
         boxes2.add(Box::new(Sphere {
-            center: Vec3{e:[165.0*rng.gen::<f64>(),165.0*rng.gen::<f64>(),165.0*rng.gen::<f64>()]},//Vec3::random_lr(0.0,165.0)
+            center: Vec3 {
+                e: [
+                    165.0 * rng.gen::<f64>(),
+                    165.0 * rng.gen::<f64>(),
+                    165.0 * rng.gen::<f64>(),
+                ],
+            }, //Vec3::random_lr(0.0,165.0)
             radius: 10.0,
             mat_ptr: white.clone(),
         }));
     }
 
     objects.add(Box::new(Translate {
-        ptr: RotateY::creat(
-            BvhNode::creat(
-                boxes2.objects,
-                0.0,
-                1.0,
-            ),
-            15.0,
-        ),
+        ptr: RotateY::creat(BvhNode::creat(boxes2.objects, 0.0, 1.0), 15.0),
         offset: Vec3 {
             e: [-100.0, 270.0, 395.0],
         },
@@ -261,12 +250,12 @@ fn solve(
 
 fn main() {
     // Image
-    let  aspect_ratio;// = 16.0 / 9.0;
-    let  image_width;//: usize = 400;
-    let  image_height;//: usize = (image_width as f64 / aspect_ratio) as usize;
-    let  samples_per_pixel;// = 100;
-    //World
-    // let world: HittableList;
+    let aspect_ratio; // = 16.0 / 9.0;
+    let image_width; //: usize = 400;
+    let image_height; //: usize = (image_width as f64 / aspect_ratio) as usize;
+    let samples_per_pixel; // = 100;
+                           //World
+                           // let world: HittableList;
     let lookfrom: Point3;
     let lookat: Point3;
     let vfov;
@@ -277,7 +266,7 @@ fn main() {
     aspect_ratio = 1.0;
     image_width = 800;
     image_height = (image_width as f64 / aspect_ratio) as usize;
-    samples_per_pixel = 1000;
+    samples_per_pixel = 10000;
     background = Color { e: [0.0, 0.0, 0.0] };
     lookfrom = Point3 {
         e: [478.0, 278.0, -600.0],
@@ -314,7 +303,7 @@ fn main() {
     for _ in 0..16 {
         let counter = Arc::clone(&lines);
         let cam_ = cam;
-        let world_ = final_scene();//world.clone();
+        let world_ = final_scene(); //world.clone();
         let background_ = background;
         let handle = thread::spawn(move || -> Vec<(usize, Vec<Color>)> {
             let mut ret: Vec<(usize, Vec<Color>)> = Default::default();

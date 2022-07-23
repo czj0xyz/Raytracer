@@ -8,10 +8,10 @@ use crate::material::Material;
 use std::f64::consts::PI;
 
 #[derive(Default, Clone)]
-pub struct Sphere<T:Material+Clone> {
+pub struct Sphere<T: Material + Clone> {
     pub center: Point3,
     pub radius: f64,
-    pub mat_ptr: T,//Material
+    pub mat_ptr: T, //Material
 }
 
 pub fn get_sphere_uv(p: Point3, u: &mut f64, v: &mut f64) {
@@ -21,7 +21,7 @@ pub fn get_sphere_uv(p: Point3, u: &mut f64, v: &mut f64) {
     *v = theta / PI;
 }
 
-impl<T:Material+Clone> Hittable for Sphere<T> {
+impl<T: Material + Clone> Hittable for Sphere<T> {
     fn hit(&self, r: Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
         let oc = r.get_start() - (*self).center;
         let a = r.get_dir().length_squared();
@@ -36,15 +36,22 @@ impl<T:Material+Clone> Hittable for Sphere<T> {
             if root < t_min || t_max < root {
                 root = (-half_b + sqrtd) / a;
                 if root < t_min || t_max < root {
-                    return None
+                    return None;
                 }
             }
-            let outward_normal_=(r.at(root) - (*self).center) / (*self).radius;
-            let mut u_ =0.0;
-            let mut v_=0.0;
-            get_sphere_uv(outward_normal_,&mut u_,&mut v_);
-            let rec = HitRecord::creat(u_,v_,root,
-                outward_normal_,r,r.at(root),& (*self).mat_ptr);
+            let outward_normal_ = (r.at(root) - (*self).center) / (*self).radius;
+            let mut u_ = 0.0;
+            let mut v_ = 0.0;
+            get_sphere_uv(outward_normal_, &mut u_, &mut v_);
+            let rec = HitRecord::creat(
+                u_,
+                v_,
+                root,
+                outward_normal_,
+                r,
+                r.at(root),
+                &(*self).mat_ptr,
+            );
             Some(rec)
         }
     }

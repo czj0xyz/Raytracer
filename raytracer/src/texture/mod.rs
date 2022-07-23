@@ -22,13 +22,13 @@ impl Texture for SolidColor {
 }
 
 #[derive(Clone)]
-pub struct CheckerTexture<T:Texture,U:Texture> {
+pub struct CheckerTexture<T: Texture, U: Texture> {
     pub odd: T,
     pub even: U,
 }
 
-impl<T:Texture,U:Texture> CheckerTexture<T,U> {
-    pub fn creat(a: Color, b: Color) -> CheckerTexture<SolidColor,SolidColor> {
+impl<T: Texture, U: Texture> CheckerTexture<T, U> {
+    pub fn creat(a: Color, b: Color) -> CheckerTexture<SolidColor, SolidColor> {
         CheckerTexture {
             odd: SolidColor { color_value: b },
             even: SolidColor { color_value: a },
@@ -36,7 +36,7 @@ impl<T:Texture,U:Texture> CheckerTexture<T,U> {
     }
 }
 
-impl<T:Texture,U:Texture> Texture for CheckerTexture<T,U> {
+impl<T: Texture, U: Texture> Texture for CheckerTexture<T, U> {
     fn value(&self, u: f64, v: f64, p: Point3) -> Color {
         let sines = (10.0 * p.x()).sin() * (10.0 * p.y()).sin() * (10.0 * p.z()).sin();
         if sines < 0.0 {

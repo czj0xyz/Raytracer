@@ -16,16 +16,17 @@ impl HittableList {
     }
 }
 
+#[allow(clippy::unnecessary_unwrap)]
 impl Hittable for HittableList {
     fn hit(&self, r: Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
         let mut closest_so_far = t_max;
-        let mut ret : Option<HitRecord>  = Default::default();
+        let mut ret: Option<HitRecord> = Default::default();
         for object in &(*self).objects {
             let rec = object.hit(r, t_min, closest_so_far);
             if rec.is_some() {
                 let tmp = rec.unwrap();
                 closest_so_far = tmp.t;
-                ret=Some(tmp);
+                ret = Some(tmp);
             }
         }
         ret
@@ -39,7 +40,7 @@ impl Hittable for HittableList {
             let mut first = true;
             for obj in &(*self).objects {
                 if !obj.bounding_box(t0, t1, &mut temp_box) {
-                    return false
+                    return false;
                 }
                 *output_box = if first {
                     temp_box
