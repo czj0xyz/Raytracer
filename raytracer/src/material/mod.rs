@@ -6,10 +6,11 @@ use crate::basic::{
     onb::Onb,
     ray::Ray,
     vec3::{
-        dot, random_cosine_direction, random_double, random_in_unit_sphere, reflect, refract,
-        unit_vector, Color, Point3, Vec3,
+        dot, random_double, random_in_unit_sphere, reflect, refract, unit_vector, Color, Point3,
+        Vec3,
     },
 };
+use crate::pdf::random_cosine_direction;
 use std::f64::consts::PI;
 
 pub trait Material: Send + Sync {

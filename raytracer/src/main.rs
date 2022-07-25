@@ -10,13 +10,14 @@ pub mod basic;
 pub mod bvh;
 pub mod hittable;
 pub mod material;
+pub mod pdf;
 pub mod texture;
 
 use basic::{
     camera::Camera,
     clamp,
     ray::Ray,
-    vec3::{dot, random_double, random_double_lr, unit_vector, Color, Point3, Vec3},
+    vec3::{random_double, Color, Point3, Vec3},
 };
 use bvh::BvhNode;
 use hittable::{
@@ -32,7 +33,7 @@ use hittable::{
     Hittable,
 };
 use material::{Dielectric, DiffuseLight, Lambertian, Metal};
-
+use pdf::{CosinePdf, Pdf};
 use texture::{ImageTexture, NoiseTexture};
 
 const QUALITY: u8 = 100;
@@ -78,34 +79,13 @@ fn ray_color(r: Ray, background: Color, world: &impl Hittable, depth: isize) -> 
             {
                 emitted
             } else {
-                let on_light = Point3 {
-                    e: [
-                        random_double_lr(213.0, 343.0),
-                        554.0,
-                        random_double_lr(227.0, 332.0),
-                    ],
-                };
-                let mut to_light = on_light - rec.p;
-                let distance_squared = to_light.length_squared();
-                to_light = unit_vector(to_light);
-
-                if dot(to_light, rec.normal) < 0.0 {
-                    return emitted;
-                };
-
-                let light_area = (343.0 - 213.0) * (332.0 - 227.0);
-                let light_cosine = to_light.y().abs();
-
-                if light_cosine < 0.000001 {
-                    return emitted;
-                };
-
-                pdf = distance_squared / (light_cosine * light_area);
+                let p: CosinePdf = CosinePdf::creat(rec.normal);
                 scattered = Ray {
                     st: rec.p,
-                    dir: to_light,
+                    dir: p.generate(),
                     tm: r.get_time(),
                 };
+                pdf = p.value(scattered.get_dir());
 
                 emitted
                     + (albedo * rec.mat_ptr.scattering_pdf(r, rec, scattered)).mul(ray_color(
@@ -399,7 +379,7 @@ fn main() {
     let aspect_ratio = 1.0;
     let image_width: usize = 600;
     let image_height: usize = (image_width as f64 / aspect_ratio) as usize;
-    let samples_per_pixel = 10;
+    let samples_per_pixel = 500;
 
     //world
     let background: Color = Color { e: [0.0; 3] };

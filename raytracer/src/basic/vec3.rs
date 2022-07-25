@@ -1,6 +1,5 @@
 use super::fmin;
 use rand::prelude::*;
-use std::f64::consts::PI;
 use std::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Sub, SubAssign};
 
 pub fn random_double() -> f64 {
@@ -226,17 +225,6 @@ pub fn random_in_unit_disk() -> Vec3 {
 
 pub fn random_int_lr(min: isize, max: isize) -> isize {
     random_double_lr(min as f64, (max + 1) as f64) as isize
-}
-
-pub fn random_cosine_direction() -> Vec3 {
-    let r1 = random_double();
-    let r2 = random_double();
-    let z = (1.0 - r2).sqrt();
-
-    let phi = 2.0 * PI * r1;
-    let x = phi.cos() * r2.sqrt();
-    let y = phi.sin() * r2.sqrt();
-    Vec3 { e: [x, y, z] }
 }
 
 pub fn reflect(v: Vec3, n: Vec3) -> Vec3 {
