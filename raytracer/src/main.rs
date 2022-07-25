@@ -22,6 +22,7 @@ use bvh::BvhNode;
 use hittable::{
     aarect::{XyRect, XzRect, YzRect},
     constant_medium::ConstantMedium,
+    flip_face::FlipFace,
     hittable_list::HittableList,
     moving_sphere::MovingSphere,
     mybox::MyBox,
@@ -68,7 +69,7 @@ fn ray_color(r: Ray, background: Color, world: &impl Hittable, depth: isize) -> 
             let rec = rec.unwrap();
             let mut scattered: Ray = Default::default();
             // let mut attenuation: Color = Default::default();
-            let emitted = rec.mat_ptr.emitted(rec.u, rec.v, rec.p);
+            let emitted = rec.mat_ptr.emitted(r, rec.clone(), rec.u, rec.v, rec.p);
             let mut pdf: f64 = 0.0;
             let mut albedo: Color = Default::default();
             if !rec
@@ -303,13 +304,15 @@ fn cornell_box() -> HittableList {
         mp: red,
     }));
 
-    objects.add(Box::new(XzRect {
-        x0: 213.0,
-        x1: 343.0,
-        z0: 227.0,
-        z1: 332.0,
-        k: 554.0,
-        mp: light,
+    objects.add(Box::new(FlipFace {
+        ptr: XzRect {
+            x0: 213.0,
+            x1: 343.0,
+            z0: 227.0,
+            z1: 332.0,
+            k: 554.0,
+            mp: light,
+        },
     }));
 
     objects.add(Box::new(XzRect {

@@ -1,5 +1,6 @@
 pub mod aarect;
 pub mod constant_medium;
+pub mod flip_face;
 pub mod hittable_list;
 pub mod moving_sphere;
 pub mod mybox;
