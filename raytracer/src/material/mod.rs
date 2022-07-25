@@ -1,16 +1,16 @@
 use crate::hittable::HitRecord;
 use crate::texture::*;
 
-use std::f64::consts::PI;
 use crate::basic::{
-    fmin,fmax,
+    fmax, fmin,
+    onb::Onb,
     ray::Ray,
     vec3::{
-        dot, random_double, random_in_unit_sphere, reflect, refract,random_cosine_direction,
-        unit_vector, Color, Point3, Vec3
+        dot, random_cosine_direction, random_double, random_in_unit_sphere, reflect, refract,
+        unit_vector, Color, Point3, Vec3,
     },
-    onb::Onb,
 };
+use std::f64::consts::PI;
 
 pub trait Material: Send + Sync {
     fn scatter(
@@ -20,7 +20,7 @@ pub trait Material: Send + Sync {
         _albedo: &mut Color,
         _scattered: &mut Ray,
         _pdf: &mut f64,
-    ) -> bool{
+    ) -> bool {
         false
     }
 
@@ -28,7 +28,7 @@ pub trait Material: Send + Sync {
         Color { e: [0.0; 3] }
     }
 
-    fn scattering_pdf(&self, _r_in: Ray, _rec: HitRecord, _scattered: Ray) -> f64{
+    fn scattering_pdf(&self, _r_in: Ray, _rec: HitRecord, _scattered: Ray) -> f64 {
         0.0
     }
 }
@@ -61,21 +61,21 @@ impl<T: Texture> Material for Lambertian<T> {
         scattered: &mut Ray,
         pdf: &mut f64,
     ) -> bool {
-        let mut uvw : Onb = Default::default();
+        let mut uvw: Onb = Default::default();
         uvw.build_from_w(rec.normal);
         let dir = uvw.local_vec(random_cosine_direction());
-        *scattered = Ray{
+        *scattered = Ray {
             st: rec.p,
             dir: unit_vector(dir),
             tm: r_in.get_time(),
         };
-        *alb = (*self).albedo.value(rec.u,rec.v,rec.p);
-        *pdf = dot(uvw.w(),scattered.get_dir()) / PI;
+        *alb = (*self).albedo.value(rec.u, rec.v, rec.p);
+        *pdf = dot(uvw.w(), scattered.get_dir()) / PI;
         true
     }
-    fn scattering_pdf(&self, _r_in: Ray, rec: HitRecord, scattered: Ray) -> f64{
-        let cosine = dot(rec.normal,unit_vector(scattered.get_dir()));
-        fmax(0.0,cosine / PI)
+    fn scattering_pdf(&self, _r_in: Ray, rec: HitRecord, scattered: Ray) -> f64 {
+        let cosine = dot(rec.normal, unit_vector(scattered.get_dir()));
+        fmax(0.0, cosine / PI)
     }
 }
 
