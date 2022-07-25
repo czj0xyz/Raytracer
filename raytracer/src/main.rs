@@ -16,13 +16,14 @@ use basic::{
     camera::Camera,
     clamp,
     ray::Ray,
-    vec3::{random_double, Color, Point3, Vec3},
+    vec3::{random_double, Color, Point3, Vec3, random_double_lr, unit_vector,dot},
 };
 use bvh::BvhNode;
 use hittable::{
-    aarect::XzRect, constant_medium::ConstantMedium, hittable_list::HittableList,
+    constant_medium::ConstantMedium, hittable_list::HittableList,
     moving_sphere::MovingSphere, mybox::MyBox, rotate_y::RotateY, sphere::Sphere,
     translate::Translate, Hittable,
+    aarect::{YzRect,XzRect,XyRect}
 };
 use material::{Dielectric, DiffuseLight, Lambertian, Metal};
 
@@ -61,15 +62,38 @@ fn ray_color(r: Ray, background: Color, world: &impl Hittable, depth: isize) -> 
         if rec.is_some() {
             let rec = rec.unwrap();
             let mut scattered: Ray = Default::default();
-            let mut attenuation: Color = Default::default();
+            // let mut attenuation: Color = Default::default();
             let emitted = rec.mat_ptr.emitted(rec.u, rec.v, rec.p);
+            let mut pdf : f64 = 0.0;
+            let mut albedo : Color = Default::default();
             if !rec
                 .mat_ptr
-                .scatter(r, rec, &mut attenuation, &mut scattered)
+                .scatter(r, rec.clone(), &mut albedo, &mut scattered, &mut pdf)
             {
                 emitted
             } else {
-                emitted + attenuation.mul(ray_color(scattered, background, world, depth - 1))
+                let on_light = Point3{e:[random_double_lr(213.0,343.0), 554.0, random_double_lr(227.0,332.0) ]};
+                let mut to_light = on_light - rec.p;
+                let distance_squared = to_light.length_squared();
+                to_light = unit_vector(to_light);
+
+                if dot(to_light,rec.normal) < 0.0 {return emitted};
+
+                let light_area = (343.0-213.0)*(332.0-227.0);
+                let light_cosine = to_light.y().abs();
+
+                if light_cosine < 0.000001 {return emitted};
+
+                pdf = distance_squared / (light_cosine * light_area);
+                scattered = Ray{
+                    st:rec.p,
+                    dir:to_light,
+                    tm:r.get_time(),
+                };
+
+                emitted + 
+                (albedo * rec.mat_ptr.scattering_pdf(r,rec,scattered))
+                .mul( ray_color(scattered,background,world,depth-1) ) / pdf
             }
         } else {
             background
@@ -77,6 +101,7 @@ fn ray_color(r: Ray, background: Color, world: &impl Hittable, depth: isize) -> 
     }
 }
 
+#[allow(dead_code)]
 fn final_scene() -> HittableList {
     let mut rng = StdRng::seed_from_u64(19260817);
     let mut boxes1: HittableList = Default::default();
@@ -225,6 +250,109 @@ fn final_scene() -> HittableList {
     objects
 }
 
+#[allow(dead_code)]
+fn cornell_box() -> HittableList {
+    let mut objects: HittableList = Default::default();
+
+    let red = Lambertian::creat(Color {
+        e: [0.65, 0.05, 0.05],
+    });
+    let white = Lambertian::creat(Color {
+        e: [0.73, 0.73, 0.73],
+    });
+    let green = Lambertian::creat(Color {
+        e: [0.12, 0.45, 0.15],
+    });
+
+    let light = DiffuseLight::creat_color(Color { e: [15.0; 3] });
+
+    objects.add(Box::new(YzRect {
+        y0: 0.0,
+        y1: 555.0,
+        z0: 0.0,
+        z1: 555.0,
+        k: 555.0,
+        mp: green,
+    }));
+
+    objects.add(Box::new(YzRect {
+        y0: 0.0,
+        y1: 555.0,
+        z0: 0.0,
+        z1: 555.0,
+        k: 0.0,
+        mp: red,
+    }));
+
+    objects.add(Box::new(XzRect {
+        x0: 213.0,
+        x1: 343.0,
+        z0: 227.0,
+        z1: 332.0,
+        k: 554.0,
+        mp: light,
+    }));
+
+    objects.add(Box::new(XzRect {
+        x0: 0.0,
+        x1: 555.0,
+        z0: 0.0,
+        z1: 555.0,
+        k: 555.0,
+        mp: white.clone(),
+    }));
+
+    objects.add(Box::new(XzRect {
+        x0: 0.0,
+        x1: 555.0,
+        z0: 0.0,
+        z1: 555.0,
+        k: 0.0,
+        mp: white.clone(),
+    }));
+
+    objects.add(Box::new(XyRect {
+        x0: 0.0,
+        x1: 555.0,
+        y0: 0.0,
+        y1: 555.0,
+        k: 555.0,
+        mp: white.clone(),
+    }));
+
+    let box1 = MyBox::creat(
+        Point3 { e: [0.0; 3] },
+        Point3 {
+            e: [165.0, 330.0, 165.0],
+        },
+        white.clone(),
+    );
+    let box1 = RotateY::creat(box1, 15.0);
+    let box1 = Translate {
+        ptr: box1,
+        offset: Vec3 {
+            e: [265.0, 0.0, 295.0],
+        },
+    };
+    objects.add(Box::new(box1));
+
+    let box2 = MyBox::creat(
+        Point3 { e: [0.0; 3] },
+        Point3 { e: [165.0; 3] },
+        white,
+    );
+    let box2 = RotateY::creat(box2, -18.0);
+    let box2 = Translate {
+        ptr: box2,
+        offset: Vec3 {
+            e: [130.0, 0.0, 65.0],
+        },
+    };
+    objects.add(Box::new(box2));
+
+    objects
+}
+
 fn solve(
     cam: &Camera,
     world: &HittableList,
@@ -250,35 +378,27 @@ fn solve(
 
 fn main() {
     // Image
-    let aspect_ratio; // = 16.0 / 9.0;
-    let image_width; //: usize = 400;
-    let image_height; //: usize = (image_width as f64 / aspect_ratio) as usize;
-    let samples_per_pixel; // = 100;
-                           //World
-                           // let world: HittableList;
-    let lookfrom: Point3;
-    let lookat: Point3;
-    let vfov;
-    let aperture = 0.0;
-    let background: Color;
-
-    // world = final_scene();
-    aspect_ratio = 1.0;
-    image_width = 800;
-    image_height = (image_width as f64 / aspect_ratio) as usize;
-    samples_per_pixel = 10000;
-    background = Color { e: [0.0, 0.0, 0.0] };
-    lookfrom = Point3 {
-        e: [478.0, 278.0, -600.0],
-    };
-    lookat = Point3 {
-        e: [278.0, 278.0, 0.0],
-    };
-    vfov = 40.0;
+    let aspect_ratio = 1.0 ;
+    let image_width: usize = 600;
+    let image_height: usize = (image_width as f64 / aspect_ratio) as usize;
+    let samples_per_pixel = 10;
+    
+    //world
+    let background: Color = Color{e:[0.0;3]};
 
     //Camera
-    let vup = Vec3 { e: [0.0, 1.0, 0.0] };
+    let lookfrom = Point3 {
+        e: [278.0, 278.0, -800.0],
+    };
+    let lookat = Point3 {
+        e: [278.0, 278.0, 0.0],
+    };
+    let vup : Vec3 = Vec3{e:[0.0,1.0,0.0]};
     let dist_to_focus = 10.0;
+    let vfov = 40.0;
+    let time0 = 0.0;
+    let time1 = 1.0;
+    let aperture = 0.0;
     let cam = Camera::creat(
         lookfrom,
         lookat,
@@ -287,8 +407,8 @@ fn main() {
         aspect_ratio,
         aperture,
         dist_to_focus,
-        0.0,
-        1.0,
+        time0,
+        time1,
     );
     let path = "output/output.jpg";
     let mut img: RgbImage = ImageBuffer::new(image_width as u32, image_height as u32);
@@ -303,7 +423,7 @@ fn main() {
     for _ in 0..32 {
         let counter = Arc::clone(&lines);
         let cam_ = cam;
-        let world_ = final_scene(); //world.clone();
+        let world_ = cornell_box(); //world.clone();
         let background_ = background;
         let handle = thread::spawn(move || -> Vec<(usize, Vec<Color>)> {
             let mut ret: Vec<(usize, Vec<Color>)> = Default::default();

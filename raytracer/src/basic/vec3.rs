@@ -1,6 +1,7 @@
 use super::fmin;
 use rand::prelude::*;
 use std::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Sub, SubAssign};
+use std::f64::consts::PI;
 
 pub fn random_double() -> f64 {
     rand::thread_rng().gen::<f64>()
@@ -195,6 +196,15 @@ pub fn random_in_unit_sphere() -> Vec3 {
     }
 }
 
+pub fn random_in_hemisphere(normal: Vec3) -> Vec3 {
+    let in_unit_sphere = random_in_unit_sphere();
+    if dot(in_unit_sphere, normal) > 0.0 {
+        in_unit_sphere
+    } else {
+        Vec3 { e: [0.0; 3] } - in_unit_sphere
+    }
+}
+
 pub fn random_unit_vector() -> Vec3 {
     unit_vector(random_in_unit_sphere())
 }
@@ -216,6 +226,17 @@ pub fn random_in_unit_disk() -> Vec3 {
 
 pub fn random_int_lr(min: isize, max: isize) -> isize {
     random_double_lr(min as f64, (max + 1) as f64) as isize
+}
+
+pub fn random_cosine_direction() -> Vec3{
+    let r1 = random_double();
+    let r2 = random_double();
+    let z = (1.0-r2).sqrt();
+
+    let phi = 2.0*PI*r1;
+    let x = phi.cos() * r2.sqrt();
+    let y = phi.sin() * r2.sqrt();
+    Vec3{e:[x,y,z]}
 }
 
 pub fn reflect(v: Vec3, n: Vec3) -> Vec3 {

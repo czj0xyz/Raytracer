@@ -1,26 +1,35 @@
 use crate::hittable::HitRecord;
 use crate::texture::*;
 
+use std::f64::consts::PI;
 use crate::basic::{
-    fmin,
+    fmin,fmax,
     ray::Ray,
     vec3::{
-        dot, random_double, random_in_unit_sphere, random_unit_vector, reflect, refract,
-        unit_vector, Color, Point3, Vec3,
+        dot, random_double, random_in_unit_sphere, reflect, refract,random_cosine_direction,
+        unit_vector, Color, Point3, Vec3
     },
+    onb::Onb,
 };
 
 pub trait Material: Send + Sync {
     fn scatter(
         &self,
-        r_in: Ray,
-        rec: HitRecord,
-        attenuation: &mut Color,
-        scattered: &mut Ray,
-    ) -> bool;
+        _r_in: Ray,
+        _rec: HitRecord,
+        _albedo: &mut Color,
+        _scattered: &mut Ray,
+        _pdf: &mut f64,
+    ) -> bool{
+        false
+    }
 
     fn emitted(&self, _u: f64, _v: f64, _p: Point3) -> Color {
         Color { e: [0.0; 3] }
+    }
+
+    fn scattering_pdf(&self, _r_in: Ray, _rec: HitRecord, _scattered: Ray) -> f64{
+        0.0
     }
 }
 
@@ -46,22 +55,27 @@ impl Lambertian<SolidColor> {
 impl<T: Texture> Material for Lambertian<T> {
     fn scatter(
         &self,
-        _r_in: Ray,
+        r_in: Ray,
         rec: HitRecord,
-        attenuation: &mut Color,
+        alb: &mut Color,
         scattered: &mut Ray,
+        pdf: &mut f64,
     ) -> bool {
-        let mut scatter_direction = rec.normal + random_unit_vector();
-        if scatter_direction.near_zero() {
-            scatter_direction = rec.normal;
-        }
-        *scattered = Ray {
+        let mut uvw : Onb = Default::default();
+        uvw.build_from_w(rec.normal);
+        let dir = uvw.local_vec(random_cosine_direction());
+        *scattered = Ray{
             st: rec.p,
-            dir: scatter_direction,
-            tm: _r_in.get_time(),
+            dir: unit_vector(dir),
+            tm: r_in.get_time(),
         };
-        *attenuation = (*self).albedo.value(rec.u, rec.v, rec.p);
+        *alb = (*self).albedo.value(rec.u,rec.v,rec.p);
+        *pdf = dot(uvw.w(),scattered.get_dir()) / PI;
         true
+    }
+    fn scattering_pdf(&self, _r_in: Ray, rec: HitRecord, scattered: Ray) -> f64{
+        let cosine = dot(rec.normal,unit_vector(scattered.get_dir()));
+        fmax(0.0,cosine / PI)
     }
 }
 
@@ -72,6 +86,7 @@ impl Material for Metal {
         rec: HitRecord,
         attenuation: &mut Color,
         scattered: &mut Ray,
+        _pdf: &mut f64,
     ) -> bool {
         let reflected = reflect(unit_vector(r_in.get_dir()), rec.normal);
         *scattered = Ray {
@@ -96,6 +111,7 @@ impl Material for Dielectric {
         rec: HitRecord,
         attenuation: &mut Color,
         scattered: &mut Ray,
+        _pdf: &mut f64,
     ) -> bool {
         *attenuation = Color { e: [1.0; 3] };
         let refraction_ratio = if rec.front_face {
@@ -170,6 +186,7 @@ impl<T: Texture> Material for DiffuseLight<T> {
         _rec: HitRecord,
         _attenuation: &mut Color,
         _scattered: &mut Ray,
+        _pdf: &mut f64,
     ) -> bool {
         false
     }
@@ -198,6 +215,7 @@ impl<T: Texture> Material for Isotropic<T> {
         rec: HitRecord,
         attenuation: &mut Color,
         scattered: &mut Ray,
+        _pdf: &mut f64,
     ) -> bool {
         *scattered = Ray {
             st: rec.p,
